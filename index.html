@@ -1,0 +1,4976 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>后期制作分配看板</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --panel-soft: #f9fafb;
+      --ink: #17202a;
+      --muted: #697586;
+      --line: #e2e7ee;
+      --blue: #2563eb;
+      --teal: #0f9488;
+      --amber: #c97a08;
+      --red: #d33f49;
+      --violet: #7657c7;
+      --green: #25805a;
+      --nav: #101820;
+      --nav-soft: #17222d;
+      --shadow: 0 12px 28px rgba(16, 24, 32, .07);
+      --radius: 8px;
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        linear-gradient(180deg, #eef3f8 0, var(--bg) 240px);
+      color: var(--ink);
+      min-width: 1120px;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: 236px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: linear-gradient(180deg, var(--nav), #131c24 62%, #18222b);
+      color: #f6f8fb;
+      padding: 20px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      border-right: 1px solid rgba(255,255,255,.08);
+    }
+
+    .brand {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #2d6cdf, #14a799);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: white;
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .brand-subtitle {
+      color: #9fb0bf;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .nav {
+      display: grid;
+      gap: 6px;
+    }
+
+    .nav button {
+      border: 0;
+      background: transparent;
+      color: #cbd5df;
+      text-align: left;
+      padding: 10px 11px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav button.active {
+      background: #ffffff;
+      color: #111827;
+      font-weight: 700;
+      box-shadow: 0 10px 22px rgba(0,0,0,.18);
+    }
+
+    .nav button:not(.active):hover {
+      background: rgba(255,255,255,.08);
+      color: white;
+    }
+
+    .side-section {
+      border-top: 1px solid rgba(255,255,255,.10);
+      padding-top: 16px;
+    }
+
+    .side-heading {
+      color: #8fa2b2;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+
+    .team-load {
+      display: grid;
+      gap: 10px;
+    }
+
+    .team-row {
+      display: grid;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .team-row span {
+      display: flex;
+      justify-content: space-between;
+      color: #e8eef5;
+    }
+
+    .bar {
+      height: 7px;
+      background: rgba(255,255,255,.10);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .bar i {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #2f73e6, #16a394);
+      width: var(--w);
+    }
+
+    .main {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .topbar {
+      background: rgba(255,255,255,.86);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+      padding: 15px 22px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: 21px;
+      letter-spacing: 0;
+    }
+
+    .title p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .filters select, .search {
+      height: 38px;
+      border: 1px solid #d7dee8;
+      background: white;
+      color: var(--ink);
+      border-radius: 8px;
+      padding: 0 10px;
+      min-width: 128px;
+    }
+
+    .search { width: 210px; }
+
+    .primary {
+      border: 0;
+      background: #1f63e9;
+      color: white;
+      height: 38px;
+      padding: 0 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .content {
+      padding: 18px 22px 34px;
+      overflow: auto;
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .metric {
+      background: linear-gradient(180deg, #ffffff, #fbfcfe);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 13px 14px;
+      box-shadow: 0 8px 20px rgba(16,24,32,.045);
+      text-align: left;
+      width: 100%;
+      color: inherit;
+    }
+
+    button.metric:hover {
+      border-color: #9ab5e8;
+      box-shadow: 0 10px 24px rgba(40, 103, 216, .12);
+      transform: translateY(-1px);
+    }
+
+    .metric b {
+      display: block;
+      font-size: 25px;
+      margin-bottom: 3px;
+      color: #111827;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .ops-grid {
+      display: grid;
+      grid-template-columns: 1.3fr .9fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .flow-map {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .flow-step {
+      background: linear-gradient(180deg, #ffffff, #f8fafc);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: 0 8px 20px rgba(16,24,32,.045);
+      min-height: 96px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .flow-step::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 3px;
+      background: linear-gradient(180deg, var(--blue), var(--teal));
+    }
+
+    .flow-step b {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .flow-step span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 15px;
+      box-shadow: var(--shadow);
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .section h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .section small {
+      color: var(--muted);
+    }
+
+    .todo-list, .risk-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .todo-item, .risk-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcff;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .todo-item:hover, .risk-item:hover {
+      border-color: #9ab5e8;
+      background: #f6f9ff;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--blue);
+    }
+
+    .dot.red { background: var(--red); }
+    .dot.amber { background: var(--amber); }
+    .dot.teal { background: var(--teal); }
+    .dot.violet { background: var(--violet); }
+
+    .kanban {
+      display: grid;
+      grid-template-columns: repeat(10, 282px);
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      min-height: 650px;
+    }
+
+    .column {
+      background: #f0f3f7;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 610px;
+    }
+
+    .column-head {
+      padding: 13px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      font-weight: 800;
+      font-size: 14px;
+      color: #263241;
+      background: #f8fafc;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .count {
+      min-width: 24px;
+      height: 24px;
+      border-radius: 99px;
+      background: white;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 12px;
+      border: 1px solid var(--line);
+    }
+
+    .dropzone {
+      padding: 10px;
+      display: grid;
+      align-content: start;
+      gap: 10px;
+    }
+
+    .dropzone.over {
+      background: rgba(40,103,216,.08);
+    }
+
+    .task-card {
+      background: white;
+      border: 1px solid #dde5ee;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 8px 18px rgba(16,24,32,.055);
+      display: grid;
+      gap: 9px;
+    }
+
+    .task-card:hover {
+      border-color: #b7c8e6;
+      box-shadow: 0 12px 26px rgba(16,24,32,.08);
+    }
+
+    .task-card[draggable="true"] { cursor: grab; }
+    .task-card.dragging { opacity: .55; }
+
+    .task-card.focus, .planner-card.focus, tr.focus {
+      outline: 2px solid var(--blue);
+      outline-offset: 2px;
+    }
+
+    .task-title {
+      font-weight: 800;
+      line-height: 1.35;
+      font-size: 14px;
+    }
+
+    .chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 7px;
+      border-radius: 6px;
+      font-size: 12px;
+      background: #eef2f6;
+      color: #52606f;
+      white-space: nowrap;
+    }
+
+    .chip.blue { background: #e5efff; color: #235fc7; }
+    .chip.teal { background: #def5f2; color: #087b75; }
+    .chip.amber { background: #fff1d5; color: #94600b; }
+    .chip.red { background: #ffe6e6; color: #bf2f2f; }
+    .chip.violet { background: #efe7ff; color: #6744bc; }
+    .chip.green { background: #e1f4ea; color: #22704f; }
+
+    .progress {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .progress-track {
+      height: 6px;
+      background: #e5eaf1;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-track i {
+      display: block;
+      height: 100%;
+      width: var(--p);
+      background: var(--blue);
+    }
+
+    .task-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .table-wrap {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: auto;
+      box-shadow: var(--shadow);
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 980px;
+      font-size: 13px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #f2f5f8;
+      z-index: 1;
+      color: #374151;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    tr:hover td { background: #f7faff; }
+
+    .capacity-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(230px, 1fr));
+      gap: 14px;
+    }
+
+    .weekly-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .weekly-toolbar select {
+      height: 38px;
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 8px;
+      padding: 0 10px;
+      min-width: 150px;
+    }
+
+    .weekly-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(260px, 1fr));
+      gap: 14px;
+      align-items: start;
+    }
+
+    .week-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      min-height: 560px;
+    }
+
+    .week-head {
+      padding: 14px;
+      background: linear-gradient(180deg, #f6f9fc, #edf3f8);
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      gap: 8px;
+    }
+
+    .week-head h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .week-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .week-stat {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 7px;
+    }
+
+    .week-stat b {
+      display: block;
+      font-size: 17px;
+      margin-bottom: 2px;
+    }
+
+    .week-body {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .team-week {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px;
+      display: grid;
+      gap: 7px;
+      background: #fbfcff;
+    }
+
+    .team-week-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .week-task {
+      border-left: 3px solid var(--blue);
+      padding: 7px 8px;
+      background: #f7f9ff;
+      border-radius: 6px;
+      font-size: 12px;
+      line-height: 1.5;
+      cursor: pointer;
+    }
+
+    .week-task:hover {
+      background: #eef4ff;
+    }
+
+    .planner-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .planner-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .planner-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+      box-shadow: 0 8px 18px rgba(16,24,32,.055);
+    }
+
+    .planner-card:hover {
+      border-color: #b7c8e6;
+      box-shadow: 0 12px 26px rgba(16,24,32,.08);
+    }
+
+    .planner-card h3 {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .mini-actions {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .mini-actions button {
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      border-radius: 7px;
+      height: 30px;
+      padding: 0 9px;
+      font-size: 12px;
+      color: var(--ink);
+    }
+
+    .mini-actions button.primary-mini {
+      background: #1f63e9;
+      border-color: #1f63e9;
+      color: white;
+      font-weight: 700;
+    }
+
+    .mini-actions button:hover, .secondary:hover, .icon-btn:hover {
+      border-color: #b7c8e6;
+      background: #eef4ff;
+    }
+
+    .team-card {
+      background: linear-gradient(180deg, #ffffff, #fbfcfe);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 15px;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 12px;
+    }
+
+    .team-card h3 {
+      margin: 0;
+      font-size: 16px;
+      color: #111827;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 7px 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .kv b { color: var(--ink); }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 32, .48);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 20px;
+    }
+
+    .modal.open { display: flex; }
+
+    .dialog {
+      width: 680px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 25px 90px rgba(0,0,0,.22);
+      padding: 18px;
+    }
+
+    .dialog-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .dialog h2 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 8px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .field.full { grid-column: 1 / -1; }
+
+    .field input, .field select, .field textarea {
+      border: 1px solid #d7dee8;
+      border-radius: 8px;
+      padding: 9px 10px;
+      color: var(--ink);
+      background: white;
+      min-height: 38px;
+    }
+
+    .field input:focus, .field select:focus, .field textarea:focus,
+    .filters select:focus, .search:focus, .weekly-toolbar select:focus {
+      outline: 2px solid rgba(37,99,235,.18);
+      border-color: #7ea4ef;
+    }
+
+    .field textarea { min-height: 84px; resize: vertical; }
+
+    .dialog-actions {
+      margin-top: 16px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .secondary {
+      border: 1px solid #d7dee8;
+      background: white;
+      color: var(--ink);
+      height: 38px;
+      padding: 0 14px;
+      border-radius: 8px;
+      font-weight: 700;
+    }
+
+    /* Refined operations-console skin */
+    :root {
+      --bg: #f3f5f7;
+      --panel: #ffffff;
+      --ink: #16202b;
+      --muted: #667085;
+      --line: #dfe5ec;
+      --blue: #2457d6;
+      --teal: #0f8f88;
+      --amber: #c8740a;
+      --red: #cc3d48;
+      --violet: #7257be;
+      --green: #26795a;
+      --nav: #0e1721;
+      --shadow: 0 1px 2px rgba(16,24,40,.05), 0 12px 28px rgba(16,24,40,.07);
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 18% -12%, rgba(36,87,214,.12), transparent 26%),
+        linear-gradient(180deg, #eef2f6 0, #f7f8fa 280px, #f3f5f7 100%);
+    }
+
+    .app-shell {
+      grid-template-columns: 252px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      padding: 18px 14px;
+      background:
+        linear-gradient(180deg, rgba(37,87,214,.08), transparent 32%),
+        #101923;
+      box-shadow: inset -1px 0 rgba(255,255,255,.06);
+    }
+
+    .brand {
+      padding: 4px 6px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.09);
+    }
+
+    .brand-mark {
+      background: linear-gradient(135deg, #2563eb 0%, #16a394 100%);
+      box-shadow: 0 10px 20px rgba(37,99,235,.28);
+    }
+
+    .brand-title {
+      font-size: 16px;
+    }
+
+    .brand-subtitle {
+      color: #8ea2b5;
+    }
+
+    .nav {
+      gap: 5px;
+    }
+
+    .nav button {
+      min-height: 38px;
+      padding: 0 11px;
+      color: #b9c6d3;
+      border: 1px solid transparent;
+    }
+
+    .nav button span {
+      color: #6f8397;
+      font-size: 11px;
+    }
+
+    .nav button.active {
+      background: linear-gradient(180deg, #ffffff, #f4f7fb);
+      border-color: rgba(255,255,255,.6);
+      color: #101828;
+      box-shadow: 0 12px 24px rgba(0,0,0,.22);
+    }
+
+    .nav button.active span {
+      color: #2457d6;
+    }
+
+    .side-section {
+      padding: 16px 6px 0;
+    }
+
+    .side-heading {
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 11px;
+    }
+
+    .topbar {
+      grid-template-columns: minmax(300px, 1fr) auto;
+      min-height: 78px;
+      background: rgba(255,255,255,.78);
+      border-bottom-color: rgba(210,218,228,.85);
+    }
+
+    .title h1 {
+      font-size: 20px;
+      font-weight: 850;
+    }
+
+    .title p {
+      max-width: 760px;
+    }
+
+    .filters {
+      padding: 6px;
+      background: rgba(255,255,255,.76);
+      border: 1px solid rgba(223,229,236,.9);
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(16,24,40,.04);
+    }
+
+    .filters select,
+    .search,
+    .weekly-toolbar select {
+      height: 34px;
+      border-color: transparent;
+      background: #f6f8fb;
+      color: #253142;
+      box-shadow: inset 0 0 0 1px #e1e7ef;
+    }
+
+    .search {
+      width: 230px;
+    }
+
+    .primary {
+      height: 34px;
+      background: linear-gradient(180deg, #2f6fe8, #1f56d0);
+      box-shadow: 0 8px 18px rgba(36,87,214,.24);
+    }
+
+    .content {
+      padding: 18px 22px 38px;
+    }
+
+    .metrics {
+      grid-template-columns: repeat(6, minmax(142px, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      position: relative;
+      overflow: hidden;
+      min-height: 82px;
+      padding: 14px;
+      border-color: #e0e6ee;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(16,24,40,.04);
+    }
+
+    .metric::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 3px;
+      background: linear-gradient(90deg, #2457d6, #0f8f88);
+    }
+
+    .metric b {
+      font-size: 28px;
+      line-height: 1;
+      margin-bottom: 8px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric span {
+      font-weight: 700;
+      color: #667085;
+    }
+
+    .flow-map {
+      gap: 8px;
+      padding: 10px;
+      background: rgba(255,255,255,.72);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(16,24,40,.04);
+    }
+
+    .flow-step {
+      min-height: 112px;
+      border: 0;
+      background: #f8fafc;
+      box-shadow: none;
+    }
+
+    .flow-step b {
+      font-size: 13px;
+      color: #17202b;
+    }
+
+    .flow-step span {
+      color: #667085;
+    }
+
+    .section,
+    .table-wrap,
+    .team-card,
+    .week-card {
+      border-color: #dfe5ec;
+      box-shadow: var(--shadow);
+    }
+
+    .section-head {
+      min-height: 30px;
+    }
+
+    .section h2 {
+      font-size: 15px;
+      font-weight: 850;
+    }
+
+    .todo-item,
+    .risk-item {
+      min-height: 60px;
+      background: #ffffff;
+      border-color: #e1e7ef;
+      box-shadow: 0 1px 2px rgba(16,24,40,.035);
+    }
+
+    .dot {
+      width: 8px;
+      height: 28px;
+      border-radius: 99px;
+    }
+
+    .kanban {
+      gap: 10px;
+      min-height: 660px;
+      padding: 2px 2px 14px;
+    }
+
+    .column {
+      min-height: 640px;
+      background: #eef2f6;
+      border-color: #dbe3ed;
+      box-shadow: inset 0 1px rgba(255,255,255,.8);
+    }
+
+    .column-head {
+      min-height: 46px;
+      background: #f8fafc;
+      color: #253142;
+    }
+
+    .count {
+      min-width: 26px;
+      height: 24px;
+      background: #edf2f8;
+      color: #4b5563;
+      font-weight: 800;
+    }
+
+    .task-card,
+    .planner-card {
+      border-color: #dfe7f0;
+      box-shadow: 0 1px 2px rgba(16,24,40,.05), 0 8px 18px rgba(16,24,40,.05);
+    }
+
+    .task-title,
+    .planner-card h3 {
+      color: #111827;
+      font-weight: 850;
+    }
+
+    .chip {
+      height: 21px;
+      border-radius: 6px;
+      background: #eef2f7;
+      color: #526171;
+      font-weight: 700;
+    }
+
+    .chip.blue { background: #e8f0ff; color: #2457d6; }
+    .chip.teal { background: #ddf5f2; color: #087a73; }
+    .chip.amber { background: #fff2d8; color: #965b09; }
+    .chip.red { background: #ffe8eb; color: #bb303b; }
+    .chip.violet { background: #f0eaff; color: #6549ad; }
+    .chip.green { background: #e4f4ec; color: #247250; }
+
+    .progress-track {
+      height: 5px;
+      background: #e8edf3;
+    }
+
+    th {
+      height: 38px;
+      background: #f7f9fc;
+    }
+
+    td {
+      background: #fff;
+    }
+
+    .weekly-toolbar {
+      padding: 12px 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .week-card {
+      min-height: 580px;
+    }
+
+    .week-head {
+      background: #f7f9fc;
+    }
+
+    .week-stat {
+      background: #fff;
+      box-shadow: inset 0 0 0 1px rgba(223,229,236,.8);
+    }
+
+    .team-week {
+      background: #fff;
+      border-color: #e1e7ef;
+    }
+
+    .team-week-head {
+      align-items: center;
+    }
+
+    .week-task {
+      background: #f7faff;
+      border-left-color: #2457d6;
+    }
+
+    .team-card {
+      min-height: 210px;
+      background: #fff;
+    }
+
+    .kv {
+      gap: 9px 14px;
+    }
+
+    .kv b {
+      text-align: right;
+      color: #17202b;
+    }
+
+    .dialog {
+      border: 1px solid rgba(255,255,255,.8);
+      box-shadow: 0 24px 80px rgba(15,23,32,.28);
+    }
+
+    /* Cockpit redesign v2 */
+    :root {
+      --bg: #eef2f6;
+      --panel: #ffffff;
+      --ink: #111827;
+      --muted: #64748b;
+      --line: #d8e0ea;
+      --blue: #1d4ed8;
+      --teal: #0d9488;
+      --amber: #d97706;
+      --red: #dc3545;
+      --violet: #6d5bd0;
+      --green: #15803d;
+      --nav: #0b1220;
+      --shadow: 0 1px 2px rgba(15,23,42,.06), 0 16px 36px rgba(15,23,42,.08);
+      --shadow-sm: 0 1px 2px rgba(15,23,42,.06);
+      font-family: Inter, "Segoe UI", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+    }
+
+    body {
+      background:
+        linear-gradient(180deg, #eaf0f7 0, #f7f9fc 260px),
+        #f7f9fc;
+      color: var(--ink);
+    }
+
+    .app-shell {
+      grid-template-columns: 238px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      background: #0b1220;
+      padding: 18px 12px;
+      gap: 18px;
+    }
+
+    .brand {
+      padding: 4px 8px 16px;
+      grid-template-columns: 38px 1fr;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      background: #ffffff;
+      color: #0b1220;
+      box-shadow: none;
+    }
+
+    .brand-title {
+      color: #f8fafc;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .brand-subtitle {
+      color: #94a3b8;
+    }
+
+    .nav button {
+      height: 40px;
+      color: #aab7c7;
+      border-radius: 8px;
+      padding: 0 10px;
+      position: relative;
+    }
+
+    .nav button::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #334155;
+      margin-right: 8px;
+      flex: 0 0 auto;
+    }
+
+    .nav button.active {
+      background: #f8fafc;
+      color: #0f172a;
+      box-shadow: none;
+    }
+
+    .nav button.active::before {
+      background: #1d4ed8;
+    }
+
+    .nav button span {
+      margin-left: auto;
+    }
+
+    .side-section {
+      padding: 14px 8px 0;
+    }
+
+    .side-heading {
+      color: #718096;
+      margin-bottom: 12px;
+    }
+
+    .team-row span {
+      color: #dbe5f0;
+    }
+
+    .bar {
+      height: 5px;
+      background: #1e293b;
+    }
+
+    .bar i {
+      background: #38bdf8;
+    }
+
+    .main {
+      background: transparent;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      margin: 0;
+      padding: 14px 22px;
+      min-height: 76px;
+      background: rgba(247,249,252,.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid #dbe3ed;
+    }
+
+    .title h1 {
+      font-size: 21px;
+      font-weight: 860;
+      color: #0f172a;
+    }
+
+    .title p {
+      font-size: 12.5px;
+      color: #64748b;
+    }
+
+    .filters {
+      background: #ffffff;
+      border: 1px solid #dbe3ed;
+      border-radius: 8px;
+      padding: 5px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .filters select,
+    .search,
+    .weekly-toolbar select {
+      height: 32px;
+      background: #f8fafc;
+      box-shadow: inset 0 0 0 1px #e2e8f0;
+      border: 0;
+      border-radius: 7px;
+    }
+
+    .primary {
+      height: 32px;
+      background: #1d4ed8;
+      border-radius: 7px;
+      box-shadow: none;
+    }
+
+    .content {
+      padding: 20px 24px 40px;
+    }
+
+    .metrics {
+      grid-template-columns: repeat(6, minmax(136px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .metric {
+      min-height: 88px;
+      background: #ffffff;
+      border: 1px solid #dfe7f0;
+      border-radius: 8px;
+      box-shadow: var(--shadow-sm);
+      padding: 16px;
+    }
+
+    .metric::before {
+      display: none;
+    }
+
+    .metric b {
+      font-size: 30px;
+      color: #0f172a;
+    }
+
+    .metric span {
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 760;
+    }
+
+    .metric:nth-child(1) { border-top: 3px solid #1d4ed8; }
+    .metric:nth-child(2) { border-top: 3px solid #0d9488; }
+    .metric:nth-child(3) { border-top: 3px solid #d97706; }
+    .metric:nth-child(4) { border-top: 3px solid #6d5bd0; }
+    .metric:nth-child(5) { border-top: 3px solid #15803d; }
+    .metric:nth-child(6) { border-top: 3px solid #dc3545; }
+
+    .flow-map {
+      counter-reset: flow;
+      background: #ffffff;
+      border: 1px solid #dfe7f0;
+      box-shadow: var(--shadow-sm);
+      padding: 8px;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .flow-step {
+      counter-increment: flow;
+      min-height: 104px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 13px 13px 13px 42px;
+      position: relative;
+    }
+
+    .flow-step::before {
+      content: counter(flow);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #0f172a;
+      color: white;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 800;
+      position: absolute;
+      top: 13px;
+      left: 12px;
+    }
+
+    .flow-step b {
+      font-size: 13px;
+      margin-bottom: 7px;
+    }
+
+    .flow-step span {
+      color: #64748b;
+      line-height: 1.55;
+    }
+
+    .ops-grid {
+      grid-template-columns: minmax(0, 1.18fr) minmax(330px, .82fr);
+    }
+
+    .section,
+    .table-wrap,
+    .team-card,
+    .week-card {
+      background: #ffffff;
+      border: 1px solid #dfe7f0;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .section {
+      padding: 14px;
+    }
+
+    .section-head {
+      border-bottom: 1px solid #edf1f5;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+
+    .section h2 {
+      font-size: 15px;
+      color: #0f172a;
+    }
+
+    .todo-item,
+    .risk-item {
+      background: #ffffff;
+      border-color: #e2e8f0;
+      border-radius: 8px;
+      box-shadow: none;
+      transition: border-color .15s ease, transform .15s ease;
+    }
+
+    .todo-item:hover,
+    .risk-item:hover,
+    .task-card:hover,
+    .planner-card:hover {
+      transform: translateY(-1px);
+      border-color: #b9c7da;
+      box-shadow: 0 10px 22px rgba(15,23,42,.08);
+    }
+
+    .kanban {
+      gap: 12px;
+    }
+
+    .column {
+      background: #eef3f8;
+      border-color: #dbe4ee;
+      min-height: 650px;
+    }
+
+    .column-head {
+      background: #ffffff;
+      min-height: 48px;
+      border-bottom-color: #dbe4ee;
+    }
+
+    .count {
+      background: #f1f5f9;
+      color: #334155;
+      border: 0;
+    }
+
+    .dropzone {
+      padding: 10px;
+      gap: 10px;
+    }
+
+    .task-card,
+    .planner-card {
+      border-radius: 8px;
+      border: 1px solid #dfe7f0;
+      box-shadow: none;
+      background: #ffffff;
+    }
+
+    .task-title,
+    .planner-card h3 {
+      font-size: 13.5px;
+      color: #0f172a;
+    }
+
+    .chip {
+      height: 22px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      letter-spacing: 0;
+    }
+
+    .progress-track {
+      height: 4px;
+    }
+
+    .table-wrap {
+      border-radius: 8px;
+    }
+
+    table {
+      font-size: 12.5px;
+    }
+
+    th {
+      height: 40px;
+      background: #f8fafc;
+      color: #475569;
+      border-bottom-color: #dfe7f0;
+    }
+
+    td {
+      padding: 11px 12px;
+      color: #243244;
+    }
+
+    tr:hover td {
+      background: #f8fbff;
+    }
+
+    .planner-grid {
+      grid-template-columns: 380px minmax(0, 1fr);
+    }
+
+    .mini-actions button {
+      height: 30px;
+      background: #f8fafc;
+      border-color: #d8e2ee;
+    }
+
+    .mini-actions button.primary-mini {
+      background: #0f172a;
+      border-color: #0f172a;
+    }
+
+    .weekly-toolbar {
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .weekly-grid {
+      gap: 12px;
+    }
+
+    .week-card {
+      min-height: 560px;
+    }
+
+    .week-head {
+      background: #ffffff;
+      border-bottom-color: #dfe7f0;
+    }
+
+    .week-stat {
+      background: #f8fafc;
+      border: 0;
+    }
+
+    .team-week {
+      border-color: #e2e8f0;
+      box-shadow: none;
+    }
+
+    .week-task {
+      background: #f8fbff;
+      border-left-width: 2px;
+    }
+
+    .team-card {
+      min-height: 200px;
+    }
+
+    .dialog {
+      border-radius: 8px;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      background: #f8fafc;
+      border-color: #d8e2ee;
+    }
+
+    /* Apple-inspired executive cockpit */
+    :root {
+      --bg: #f5f5f7;
+      --panel: rgba(255,255,255,.86);
+      --ink: #1d1d1f;
+      --muted: #6e6e73;
+      --line: rgba(0,0,0,.08);
+      --blue: #0071e3;
+      --teal: #00a6a6;
+      --amber: #bf6a02;
+      --red: #d70015;
+      --violet: #7e5bef;
+      --green: #188038;
+      --nav: rgba(255,255,255,.62);
+      --shadow: 0 18px 50px rgba(0,0,0,.07);
+      --shadow-sm: 0 8px 26px rgba(0,0,0,.045);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", "Microsoft YaHei", sans-serif;
+    }
+
+    body {
+      background:
+        linear-gradient(180deg, #ffffff 0%, #f5f5f7 34%, #f2f3f5 100%);
+      color: var(--ink);
+    }
+
+    .app-shell {
+      grid-template-columns: 220px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      margin: 14px 0 14px 14px;
+      min-height: calc(100vh - 28px);
+      background: rgba(255,255,255,.62);
+      color: #1d1d1f;
+      border: 1px solid rgba(0,0,0,.07);
+      border-radius: 8px;
+      box-shadow: 0 24px 70px rgba(0,0,0,.08);
+      backdrop-filter: blur(28px) saturate(180%);
+      padding: 16px 12px;
+    }
+
+    .brand {
+      border-bottom: 0;
+      padding: 4px 6px 18px;
+    }
+
+    .brand-mark {
+      background: #1d1d1f;
+      color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 14px 30px rgba(0,0,0,.16);
+    }
+
+    .brand-title {
+      color: #1d1d1f;
+      font-weight: 760;
+    }
+
+    .brand-subtitle {
+      color: #86868b;
+    }
+
+    .nav {
+      gap: 4px;
+    }
+
+    .nav button {
+      height: 38px;
+      color: #54545a;
+      background: transparent;
+      border: 0;
+      font-weight: 650;
+    }
+
+    .nav button::before {
+      display: none;
+    }
+
+    .nav button span {
+      color: #a1a1a6;
+    }
+
+    .nav button.active {
+      background: rgba(0,0,0,.84);
+      color: white;
+      box-shadow: 0 12px 28px rgba(0,0,0,.16);
+    }
+
+    .nav button.active span {
+      color: rgba(255,255,255,.62);
+    }
+
+    .nav button:not(.active):hover {
+      background: rgba(0,0,0,.045);
+      color: #1d1d1f;
+    }
+
+    .side-section {
+      border-top: 1px solid rgba(0,0,0,.07);
+      padding: 16px 6px 0;
+    }
+
+    .side-heading {
+      color: #86868b;
+      letter-spacing: 0;
+      text-transform: none;
+      font-weight: 700;
+    }
+
+    .team-row span {
+      color: #424245;
+    }
+
+    .bar {
+      height: 4px;
+      background: rgba(0,0,0,.08);
+    }
+
+    .bar i {
+      background: linear-gradient(90deg, #0071e3, #00a6a6);
+    }
+
+    .topbar {
+      margin: 14px 14px 0 14px;
+      border: 1px solid rgba(0,0,0,.07);
+      border-radius: 8px;
+      background: rgba(255,255,255,.74);
+      backdrop-filter: blur(30px) saturate(180%);
+      box-shadow: 0 18px 50px rgba(0,0,0,.06);
+      min-height: 86px;
+      padding: 18px 20px;
+    }
+
+    .title h1 {
+      font-size: 28px;
+      line-height: 1.08;
+      font-weight: 780;
+      color: #1d1d1f;
+    }
+
+    .title p {
+      font-size: 13px;
+      color: #6e6e73;
+      margin-top: 8px;
+    }
+
+    .filters {
+      border: 1px solid rgba(0,0,0,.07);
+      background: rgba(245,245,247,.72);
+      border-radius: 8px;
+      box-shadow: none;
+      backdrop-filter: blur(16px);
+    }
+
+    .filters select,
+    .search,
+    .weekly-toolbar select {
+      height: 34px;
+      background: rgba(255,255,255,.86);
+      border: 0;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+      color: #1d1d1f;
+    }
+
+    .primary {
+      height: 34px;
+      background: #0071e3;
+      color: #fff;
+      box-shadow: 0 10px 22px rgba(0,113,227,.22);
+    }
+
+    .content {
+      padding: 18px 14px 40px;
+    }
+
+    .metrics {
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      min-height: 118px;
+      padding: 20px;
+      background: rgba(255,255,255,.86);
+      border: 1px solid rgba(0,0,0,.07);
+      box-shadow: 0 18px 46px rgba(0,0,0,.055);
+      backdrop-filter: blur(18px);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .metric:nth-child(n) {
+      border-top: 1px solid rgba(0,0,0,.07);
+    }
+
+    .metric:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 24px 60px rgba(0,0,0,.08);
+    }
+
+    .metric b {
+      font-size: 42px;
+      letter-spacing: 0;
+      font-weight: 760;
+      color: #1d1d1f;
+      margin-bottom: 12px;
+    }
+
+    .metric span {
+      color: #6e6e73;
+      font-size: 13px;
+      font-weight: 680;
+    }
+
+    .flow-map {
+      padding: 12px;
+      gap: 10px;
+      border: 1px solid rgba(0,0,0,.07);
+      background: rgba(255,255,255,.62);
+      backdrop-filter: blur(24px);
+      box-shadow: 0 18px 50px rgba(0,0,0,.045);
+      margin-bottom: 18px;
+    }
+
+    .flow-step {
+      min-height: 128px;
+      background: rgba(255,255,255,.82);
+      border: 1px solid rgba(0,0,0,.06);
+      padding: 18px 16px 16px;
+      box-shadow: none;
+    }
+
+    .flow-step::before {
+      position: static;
+      width: 28px;
+      height: 28px;
+      margin-bottom: 12px;
+      background: #1d1d1f;
+      font-size: 13px;
+    }
+
+    .flow-step b {
+      font-size: 15px;
+      font-weight: 760;
+      color: #1d1d1f;
+      margin-bottom: 8px;
+    }
+
+    .flow-step span {
+      color: #6e6e73;
+      font-size: 12.5px;
+    }
+
+    .ops-grid {
+      gap: 18px;
+    }
+
+    .section,
+    .table-wrap,
+    .team-card,
+    .week-card,
+    .weekly-toolbar {
+      border: 1px solid rgba(0,0,0,.07);
+      background: rgba(255,255,255,.84);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 18px 48px rgba(0,0,0,.045);
+    }
+
+    .section {
+      padding: 18px;
+    }
+
+    .section-head {
+      border-bottom: 0;
+      padding-bottom: 4px;
+      margin-bottom: 14px;
+    }
+
+    .section h2,
+    .weekly-toolbar h2 {
+      font-size: 18px !important;
+      font-weight: 760;
+      color: #1d1d1f;
+    }
+
+    .section small,
+    .weekly-toolbar small {
+      color: #86868b !important;
+    }
+
+    .todo-list,
+    .risk-list {
+      gap: 12px;
+    }
+
+    .todo-item,
+    .risk-item {
+      min-height: 72px;
+      padding: 14px;
+      border: 1px solid rgba(0,0,0,.06);
+      background: rgba(255,255,255,.78);
+      box-shadow: none;
+    }
+
+    .dot {
+      width: 5px;
+      height: 34px;
+      border-radius: 99px;
+    }
+
+    .kanban {
+      gap: 14px;
+      padding: 4px 4px 18px;
+    }
+
+    .column {
+      background: rgba(255,255,255,.54);
+      border: 1px solid rgba(0,0,0,.07);
+      box-shadow: 0 18px 44px rgba(0,0,0,.04);
+      backdrop-filter: blur(18px);
+    }
+
+    .column-head {
+      min-height: 54px;
+      background: transparent;
+      border-bottom: 1px solid rgba(0,0,0,.06);
+      color: #1d1d1f;
+      font-size: 15px;
+      padding: 0 14px;
+    }
+
+    .count {
+      background: rgba(0,0,0,.06);
+      color: #1d1d1f;
+    }
+
+    .task-card,
+    .planner-card {
+      padding: 14px;
+      border: 1px solid rgba(0,0,0,.065);
+      background: rgba(255,255,255,.9);
+      box-shadow: 0 10px 26px rgba(0,0,0,.045);
+    }
+
+    .task-title,
+    .planner-card h3 {
+      font-size: 15px;
+      line-height: 1.45;
+      font-weight: 740;
+    }
+
+    .chip {
+      height: 24px;
+      padding: 0 8px;
+      background: rgba(0,0,0,.055);
+      color: #424245;
+      font-weight: 650;
+    }
+
+    .chip.blue { background: rgba(0,113,227,.12); color: #0066cc; }
+    .chip.teal { background: rgba(0,166,166,.12); color: #007a7a; }
+    .chip.amber { background: rgba(191,106,2,.13); color: #8a4b00; }
+    .chip.red { background: rgba(215,0,21,.12); color: #b00012; }
+    .chip.violet { background: rgba(126,91,239,.13); color: #5b3fc9; }
+    .chip.green { background: rgba(24,128,56,.12); color: #12672d; }
+
+    .progress-track {
+      background: rgba(0,0,0,.08);
+    }
+
+    .progress-track i {
+      background: #0071e3;
+    }
+
+    table {
+      font-size: 13px;
+    }
+
+    th {
+      background: rgba(245,245,247,.92);
+      color: #6e6e73;
+      border-bottom: 1px solid rgba(0,0,0,.07);
+    }
+
+    td {
+      background: rgba(255,255,255,.86);
+      color: #1d1d1f;
+      border-bottom: 1px solid rgba(0,0,0,.055);
+      padding: 13px 14px;
+    }
+
+    tr:hover td {
+      background: rgba(0,113,227,.045);
+    }
+
+    .planner-grid {
+      grid-template-columns: 400px minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .mini-actions button {
+      background: rgba(245,245,247,.9);
+      border-color: rgba(0,0,0,.07);
+      color: #1d1d1f;
+    }
+
+    .mini-actions button.primary-mini {
+      background: #1d1d1f;
+      border-color: #1d1d1f;
+      color: #fff;
+    }
+
+    .weekly-toolbar {
+      padding: 16px 18px;
+      margin-bottom: 16px;
+    }
+
+    .weekly-grid {
+      gap: 14px;
+    }
+
+    .week-head {
+      background: rgba(255,255,255,.88);
+      padding: 16px;
+    }
+
+    .week-stat {
+      background: rgba(245,245,247,.86);
+      padding: 10px;
+    }
+
+    .week-stat b {
+      font-size: 22px;
+      font-weight: 740;
+    }
+
+    .team-week {
+      padding: 11px;
+      background: rgba(255,255,255,.78);
+      border-color: rgba(0,0,0,.06);
+    }
+
+    .week-task {
+      background: rgba(245,245,247,.82);
+      border-left-color: #0071e3;
+      padding: 9px 10px;
+    }
+
+    .team-card {
+      padding: 18px;
+      min-height: 224px;
+    }
+
+    .team-card h3 {
+      font-size: 20px;
+      font-weight: 760;
+    }
+
+    .kv {
+      font-size: 13px;
+    }
+
+    .dialog {
+      background: rgba(255,255,255,.94);
+      backdrop-filter: blur(30px);
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      background: rgba(245,245,247,.92);
+      border-color: rgba(0,0,0,.08);
+    }
+
+    /* Macaron production cockpit skin */
+    :root {
+      --bg: #fff8f4;
+      --panel: rgba(255,255,255,.82);
+      --ink: #273142;
+      --muted: #7d8796;
+      --line: rgba(114, 96, 88, .14);
+      --blue: #7bb7ff;
+      --teal: #77d8c3;
+      --amber: #ffd37a;
+      --red: #ff8fa3;
+      --violet: #c7b6ff;
+      --green: #a8e6b1;
+      --cream: #fff3cf;
+      --peach: #ffd6c9;
+      --rose: #ffd8e8;
+      --mint: #d8f7ed;
+      --sky: #dff0ff;
+      --lavender: #eee5ff;
+      --butter: #fff2bd;
+      --shadow: 0 18px 46px rgba(154, 127, 105, .14);
+      --shadow-sm: 0 8px 24px rgba(154, 127, 105, .10);
+    }
+
+    body {
+      background: #f7f8fb;
+      color: var(--ink);
+    }
+
+    .sidebar {
+      background: rgba(255,255,255,.82);
+      border-color: rgba(255,255,255,.92);
+      box-shadow: 0 24px 70px rgba(180, 138, 120, .18);
+    }
+
+    .brand-mark {
+      background: linear-gradient(135deg, #ffb6c8, #a7ddff 54%, #bdeec9);
+      color: #273142;
+      box-shadow: 0 14px 34px rgba(255, 172, 196, .36);
+    }
+
+    .brand-title {
+      color: #273142;
+    }
+
+    .brand-subtitle,
+    .side-heading {
+      color: #8c8190;
+    }
+
+    .nav button {
+      color: #6d7280;
+      font-weight: 700;
+    }
+
+    .nav button span {
+      color: #b0a8b6;
+    }
+
+    .nav button.active {
+      background: linear-gradient(135deg, #fff3cf, #ffd8e8);
+      color: #273142;
+      box-shadow: 0 14px 30px rgba(255, 184, 205, .32);
+    }
+
+    .nav button.active span {
+      color: #9c6b86;
+    }
+
+    .nav button:not(.active):hover {
+      background: rgba(255,255,255,.72);
+    }
+
+    .side-section {
+      border-top-color: rgba(120, 92, 100, .12);
+    }
+
+    .team-row span {
+      color: #4f5968;
+    }
+
+    .bar {
+      background: rgba(95, 74, 84, .10);
+    }
+
+    .bar i {
+      background: linear-gradient(90deg, #ff9bb5, #7bd8c4, #8bc8ff);
+    }
+
+    .topbar {
+      background: rgba(255,255,255,.86);
+      border-color: rgba(255,255,255,.92);
+      box-shadow: 0 20px 58px rgba(180, 138, 120, .16);
+    }
+
+    .title h1 {
+      color: #273142;
+      letter-spacing: 0;
+    }
+
+    .title p {
+      color: #7d8796;
+    }
+
+    .filters {
+      background: rgba(255,255,255,.66);
+      border-color: rgba(255,255,255,.92);
+    }
+
+    .filters select,
+    .search,
+    .weekly-toolbar select {
+      background: rgba(255,255,255,.86);
+      box-shadow: inset 0 0 0 1px rgba(130, 103, 116, .12);
+      color: #3a4454;
+    }
+
+    .primary {
+      background: linear-gradient(135deg, #ff9fbd, #8fcaff);
+      color: #273142;
+      box-shadow: 0 12px 26px rgba(255, 159, 189, .30);
+    }
+
+    .metric,
+    .section,
+    .table-wrap,
+    .team-card,
+    .week-card,
+    .weekly-toolbar,
+    .flow-map,
+    .column {
+      background: rgba(255,255,255,.90);
+      border-color: rgba(255,255,255,.94);
+      box-shadow: var(--shadow);
+    }
+
+    .metric {
+      min-height: 126px;
+    }
+
+    .metric b {
+      color: #273142;
+    }
+
+    .metric span {
+      color: #7d8796;
+    }
+
+    .metric::after {
+      content: "";
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 14px;
+      height: 7px;
+      border-radius: 99px;
+      opacity: .95;
+    }
+
+    .metric:nth-child(1)::after { background: #dff0ff; }
+    .metric:nth-child(2)::after { background: #d8f7ed; }
+    .metric:nth-child(3)::after { background: #fff2bd; }
+    .metric:nth-child(4)::after { background: #eee5ff; }
+    .metric:nth-child(5)::after { background: #dff6d9; }
+    .metric:nth-child(6)::after { background: #ffd8e8; }
+
+    .flow-map {
+      background: rgba(255,255,255,.90);
+    }
+
+    .flow-step {
+      background: rgba(255,255,255,.92);
+      border-color: rgba(255,255,255,.96);
+      box-shadow: 0 10px 26px rgba(180, 138, 120, .10);
+    }
+
+    .flow-step:nth-child(1) b { background: #fff2bd; }
+    .flow-step:nth-child(2) b { background: #ffd8e8; }
+    .flow-step:nth-child(3) b { background: #d8f7ed; }
+    .flow-step:nth-child(4) b { background: #dff0ff; }
+    .flow-step:nth-child(5) b { background: #eee5ff; }
+
+    .flow-step b {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 7px;
+    }
+
+    .flow-step::before {
+      background: rgba(255,255,255,.88);
+      color: #273142;
+      box-shadow: inset 0 0 0 1px rgba(110, 92, 100, .12);
+    }
+
+    .flow-step b,
+    .section h2,
+    .weekly-toolbar h2,
+    .team-card h3 {
+      color: #273142;
+    }
+
+    .flow-step span,
+    .section small,
+    .weekly-toolbar small {
+      color: #7d8796 !important;
+    }
+
+    .todo-item,
+    .risk-item,
+    .task-card,
+    .planner-card,
+    .team-week,
+    .week-task {
+      background: rgba(255,255,255,.94);
+      border-color: rgba(255,255,255,.96);
+      box-shadow: 0 10px 26px rgba(180, 138, 120, .10);
+    }
+
+    .todo-item:hover,
+    .risk-item:hover,
+    .task-card:hover,
+    .planner-card:hover {
+      border-color: rgba(255,255,255,1);
+      box-shadow: 0 18px 38px rgba(180, 138, 120, .18);
+    }
+
+    .column {
+      background: rgba(255,255,255,.76);
+    }
+
+    .column-head::before {
+      content: "";
+      width: 8px;
+      height: 26px;
+      border-radius: 99px;
+      margin-right: 8px;
+      flex: 0 0 auto;
+      background: #dff0ff;
+    }
+
+    .column:nth-child(5n+1) .column-head::before { background: #dff0ff; }
+    .column:nth-child(5n+2) .column-head::before { background: #ffd8e8; }
+    .column:nth-child(5n+3) .column-head::before { background: #d8f7ed; }
+    .column:nth-child(5n+4) .column-head::before { background: #fff2bd; }
+    .column:nth-child(5n+5) .column-head::before { background: #eee5ff; }
+
+    .column-head {
+      color: #273142;
+      border-bottom-color: rgba(120, 92, 100, .10);
+    }
+
+    .count {
+      background: rgba(255,255,255,.78);
+      color: #5d6472;
+    }
+
+    .task-title,
+    .planner-card h3 {
+      color: #273142;
+    }
+
+    .chip {
+      background: rgba(255,255,255,.72);
+      color: #616a79;
+      box-shadow: inset 0 0 0 1px rgba(110, 92, 100, .08);
+    }
+
+    .chip.blue { background: #dff0ff; color: #246aa9; }
+    .chip.teal { background: #d8f7ed; color: #247c6d; }
+    .chip.amber { background: #fff2bd; color: #8f6316; }
+    .chip.red { background: #ffd8e8; color: #a74463; }
+    .chip.violet { background: #eee5ff; color: #6450a8; }
+    .chip.green { background: #dff6d9; color: #437d3f; }
+
+    .progress-track {
+      background: rgba(100, 84, 95, .10);
+    }
+
+    .progress-track i {
+      background: linear-gradient(90deg, #ff9fbd, #8fcaff);
+    }
+
+    th {
+      background: rgba(255,255,255,.72);
+      color: #7d8796;
+      border-bottom-color: rgba(120, 92, 100, .10);
+    }
+
+    td {
+      background: rgba(255,255,255,.62);
+      color: #30394a;
+      border-bottom-color: rgba(120, 92, 100, .08);
+    }
+
+    tr:hover td {
+      background: rgba(255, 216, 232, .22);
+    }
+
+    .mini-actions button {
+      background: rgba(255,255,255,.70);
+      border-color: rgba(255,255,255,.96);
+      color: #4a5363;
+    }
+
+    .mini-actions button.primary-mini {
+      background: linear-gradient(135deg, #ffd8e8, #dff0ff);
+      border-color: rgba(255,255,255,.96);
+      color: #273142;
+    }
+
+    .week-head {
+      background: rgba(255,255,255,.92);
+    }
+
+    .week-stat {
+      background: rgba(255,255,255,.66);
+    }
+
+    .week-stat:nth-child(1) { background: #dff0ff; }
+    .week-stat:nth-child(2) { background: #ffd8e8; }
+    .week-stat:nth-child(3) { background: #d8f7ed; }
+
+    .field input,
+    .field select,
+    .field textarea {
+      background: rgba(255,255,255,.78);
+      border-color: rgba(120, 92, 100, .12);
+    }
+
+    .dialog {
+      background: rgba(255,255,255,.88);
+      border-color: rgba(255,255,255,.96);
+    }
+
+    /* Professional restrained palette: solid colors only */
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --blue: #2f6bff;
+      --teal: #68c7b7;
+      --amber: #f3c969;
+      --red: #ef8f9c;
+      --violet: #b7a6f6;
+      --green: #91d6a4;
+      --shadow: 0 12px 32px rgba(31, 41, 55, .07);
+      --shadow-sm: 0 6px 18px rgba(31, 41, 55, .05);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    .sidebar,
+    .topbar,
+    .filters,
+    .metric,
+    .section,
+    .table-wrap,
+    .team-card,
+    .week-card,
+    .weekly-toolbar,
+    .flow-map,
+    .column,
+    .task-card,
+    .planner-card,
+    .todo-item,
+    .risk-item,
+    .team-week,
+    .week-task,
+    .dialog {
+      background: #ffffff;
+      border-color: var(--line);
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: none;
+    }
+
+    .sidebar {
+      box-shadow: 0 12px 32px rgba(31, 41, 55, .08);
+    }
+
+    .brand-mark {
+      background: #2f6bff;
+      color: #ffffff;
+      box-shadow: none;
+    }
+
+    .nav button.active {
+      background: #eef3ff;
+      color: #1f2937;
+      box-shadow: none;
+    }
+
+    .nav button.active span {
+      color: #2f6bff;
+    }
+
+    .bar i,
+    .progress-track i,
+    .primary {
+      background: #2f6bff;
+      color: #ffffff;
+      box-shadow: none;
+    }
+
+    .mini-actions button.primary-mini {
+      background: #2f6bff;
+      border-color: #2f6bff;
+      color: #ffffff;
+    }
+
+    .filters select,
+    .search,
+    .weekly-toolbar select,
+    .field input,
+    .field select,
+    .field textarea,
+    .mini-actions button {
+      background: #f9fafb;
+      border-color: var(--line);
+      box-shadow: none;
+    }
+
+    .metric {
+      min-height: 112px;
+    }
+
+    .metric::after {
+      background: #dbe7ff;
+      opacity: 1;
+    }
+
+    .metric:nth-child(n)::after {
+      background: #dbe7ff;
+    }
+
+    .flow-step {
+      background: #f9fafb;
+      border-color: var(--line);
+      box-shadow: none;
+    }
+
+    .flow-step::before {
+      background: #2f6bff;
+      color: #ffffff;
+      box-shadow: none;
+    }
+
+    .flow-step b {
+      background: transparent !important;
+      padding: 0;
+      color: var(--ink);
+    }
+
+    .column {
+      background: #f9fafb;
+    }
+
+    .column:nth-child(n) {
+      background: #f9fafb;
+    }
+
+    .column-head::before {
+      background: #2f6bff !important;
+    }
+
+    .count {
+      background: #eef3ff;
+      color: #2f6bff;
+    }
+
+    .chip {
+      background: #f3f4f6;
+      color: #4b5563;
+      box-shadow: inset 0 0 0 1px #e5e7eb;
+    }
+
+    .chip.blue {
+      background: #e8f0ff;
+      color: #2f5fd1;
+    }
+
+    .chip.teal {
+      background: #e6f6f3;
+      color: #327f73;
+    }
+
+    .chip.amber {
+      background: #fff4d6;
+      color: #876214;
+    }
+
+    .chip.red {
+      background: #ffe9ed;
+      color: #9d4350;
+    }
+
+    .chip.violet {
+      background: #f0ecff;
+      color: #6754ad;
+    }
+
+    .chip.green {
+      background: #e9f7ed;
+      color: #3c7c4c;
+    }
+
+    .dot {
+      background: #2f6bff;
+    }
+
+    .dot.red { background: #ef8f9c; }
+    .dot.amber { background: #f3c969; }
+    .dot.teal { background: #68c7b7; }
+    .dot.violet { background: #b7a6f6; }
+
+    th,
+    .week-head {
+      background: #f9fafb;
+      color: var(--muted);
+    }
+
+    td {
+      background: #ffffff;
+      color: var(--ink);
+    }
+
+    tr:hover td,
+    .todo-item:hover,
+    .risk-item:hover,
+    .task-card:hover,
+    .planner-card:hover,
+    .week-task:hover {
+      background: #f7faff;
+    }
+
+    .week-stat {
+      background: #f9fafb !important;
+      border: 1px solid var(--line);
+    }
+
+    .week-stat b,
+    .metric b,
+    .title h1,
+    .section h2,
+    .weekly-toolbar h2,
+    .team-card h3,
+    .task-title,
+    .planner-card h3 {
+      color: var(--ink);
+    }
+
+    /* Compact kanban mode for easier full-board preview */
+    #kanban {
+      height: calc(100vh - 104px);
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 10px;
+    }
+
+    .view#kanban {
+      display: none;
+    }
+
+    .view#kanban.active {
+      display: grid;
+    }
+
+    .kanban-toolbar {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 10px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .kanban-toolbar b {
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .kanban-toolbar span {
+      color: var(--muted);
+      font-size: 12px;
+      margin-left: 8px;
+    }
+
+    .kanban-toolbar .secondary {
+      height: 30px;
+      padding: 0 10px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    #kanban .kanban {
+      grid-template-columns: repeat(var(--kanban-cols, 4), minmax(190px, 1fr));
+      gap: 10px;
+      height: 100%;
+      min-height: 0;
+      padding: 0;
+      overflow: hidden;
+      align-items: start;
+    }
+
+    #kanban .column {
+      height: 100%;
+      min-height: 0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    #kanban .column-head {
+      min-height: 36px;
+      padding: 0 9px;
+      font-size: 12.5px;
+    }
+
+    #kanban .column-head::before {
+      width: 5px;
+      height: 20px;
+      margin-right: 6px;
+    }
+
+    #kanban .count {
+      min-width: 22px;
+      height: 20px;
+      font-size: 11px;
+    }
+
+    #kanban .dropzone {
+      padding: 7px;
+      gap: 7px;
+      overflow-y: auto;
+      min-height: 0;
+      height: 100%;
+      align-content: start;
+      scrollbar-width: thin;
+    }
+
+    #kanban .dropzone::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #kanban .dropzone::-webkit-scrollbar-thumb {
+      background: #d6dee8;
+      border-radius: 99px;
+    }
+
+    #kanban .task-card {
+      padding: 7px 8px;
+      gap: 5px;
+      border-radius: 8px;
+      box-shadow: none;
+      min-height: 78px;
+    }
+
+    #kanban .task-card:hover {
+      transform: none;
+      box-shadow: var(--shadow-sm);
+    }
+
+    #kanban .task-title {
+      font-size: 12px;
+      line-height: 1.28;
+      -webkit-line-clamp: 2;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    #kanban .task-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    #kanban .task-code {
+      color: var(--muted);
+      font-size: 10.5px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #kanban .due-pill {
+      color: #5b6470;
+      background: #f2f5f8;
+      border: 1px solid #e3e8ef;
+      border-radius: 5px;
+      padding: 1px 5px;
+      font-size: 10.5px;
+      white-space: nowrap;
+    }
+
+    #kanban .kanban-tags {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 5px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    #kanban .chips {
+      gap: 4px;
+      max-height: 20px;
+      overflow: hidden;
+    }
+
+    #kanban .chip {
+      height: 18px;
+      padding: 0 5px;
+      font-size: 10.5px;
+      border-radius: 5px;
+      max-width: 86px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #kanban .progress {
+      gap: 0;
+      font-size: 0;
+    }
+
+    #kanban .progress span {
+      display: none;
+    }
+
+    #kanban .progress-track {
+      height: 3px;
+    }
+
+    #kanban .team-progress {
+      position: relative;
+      min-width: 0;
+      height: 20px;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid #dbe4ef;
+      background: #eef2f7;
+      color: #314052;
+      font-size: 10.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      padding: 0 6px;
+    }
+
+    #kanban .team-progress::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: var(--p);
+      background: #d8e6ff;
+    }
+
+    #kanban .team-progress.teal::before { background: #cceee8; }
+    #kanban .team-progress.amber::before { background: #f7e7bd; }
+    #kanban .team-progress.green::before { background: #d9efd8; }
+    #kanban .team-progress.violet::before { background: #e5dcfa; }
+    #kanban .team-progress.red::before { background: #ffd9df; }
+
+    #kanban .team-progress span {
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #kanban .kanban-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 10.5px;
+      min-width: 0;
+    }
+
+    #kanban .kanban-foot span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #kanban .task-meta {
+      font-size: 10.5px;
+      gap: 6px;
+    }
+
+    /* Compact executive metrics: denser KPI cards for the dashboard */
+    #dashboard .metrics {
+      grid-template-columns: repeat(auto-fill, minmax(108px, 136px)) !important;
+      gap: 8px !important;
+      margin-bottom: 12px !important;
+      align-items: stretch;
+      justify-content: start;
+    }
+
+    #dashboard .metric {
+      min-height: 72px !important;
+      padding: 10px 12px 10px 15px !important;
+      border-radius: 8px !important;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, .04) !important;
+      display: grid;
+      align-content: center;
+      gap: 6px;
+    }
+
+    #dashboard .metric:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(15, 23, 42, .08) !important;
+    }
+
+    #dashboard .metric b {
+      font-size: 23px !important;
+      line-height: 1 !important;
+      margin: 0 !important;
+      font-weight: 760 !important;
+    }
+
+    #dashboard .metric span {
+      font-size: 11.5px !important;
+      line-height: 1.15 !important;
+      font-weight: 680 !important;
+      color: #667085 !important;
+    }
+
+    #dashboard .metric::after {
+      left: 7px !important;
+      top: 14px !important;
+      bottom: 14px !important;
+      right: auto !important;
+      width: 3px !important;
+      height: auto !important;
+      border-radius: 999px !important;
+      opacity: .9 !important;
+    }
+
+    /* Planner action buttons: one logic, one rhythm */
+    #planner .mini-actions,
+    #demand .mini-actions {
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(88px, 1fr));
+      gap: 6px !important;
+      align-items: center;
+      max-width: 260px;
+    }
+
+    #planner .mini-actions.single,
+    #demand .mini-actions.single {
+      grid-template-columns: minmax(112px, 160px);
+    }
+
+    #planner .mini-actions button,
+    #demand .mini-actions button {
+      width: 100%;
+      height: 30px !important;
+      padding: 0 10px !important;
+      border-radius: 7px !important;
+      font-size: 12px !important;
+      font-weight: 680;
+      line-height: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-shadow: none !important;
+    }
+
+    #planner .mini-actions button.primary-mini,
+    #planner .mini-actions button[data-tone="primary"],
+    #demand .mini-actions button.primary-mini,
+    #demand .mini-actions button[data-tone="primary"] {
+      background: #2f6bff !important;
+      border-color: #2f6bff !important;
+      color: #ffffff !important;
+    }
+
+    #planner .mini-actions button[data-tone="back"],
+    #demand .mini-actions button[data-tone="back"] {
+      background: #ffffff !important;
+      border-color: #d8dee8 !important;
+      color: #475467 !important;
+    }
+
+    #planner .mini-actions button[data-tone="back"]:hover,
+    #demand .mini-actions button[data-tone="back"]:hover {
+      background: #f6f8fb !important;
+      border-color: #b9c4d4 !important;
+    }
+
+    #planner td .mini-actions,
+    #demand td .mini-actions {
+      min-width: 190px;
+    }
+
+    /* Capacity cards: keep long names and fit notes inside the card */
+    #capacity .capacity-grid {
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important;
+      gap: 12px !important;
+      align-items: stretch;
+    }
+
+    #capacity .team-card {
+      min-width: 0;
+      overflow: hidden;
+      padding: 16px 18px !important;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    #capacity .team-card h3 {
+      font-size: 18px !important;
+      line-height: 1.25;
+      margin: 0 !important;
+    }
+
+    #capacity .kv {
+      grid-template-columns: 78px minmax(0, 1fr) !important;
+      gap: 8px 12px !important;
+      align-items: start;
+      min-width: 0;
+    }
+
+    #capacity .kv span {
+      min-width: 0;
+      line-height: 1.35;
+    }
+
+    #capacity .kv b {
+      min-width: 0;
+      max-width: 100%;
+      text-align: right;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      line-height: 1.35;
+    }
+
+    #capacity .chips {
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    #capacity .chips .chip {
+      height: auto !important;
+      max-width: 100% !important;
+      padding: 6px 8px !important;
+      line-height: 1.45 !important;
+      white-space: normal !important;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      display: block;
+    }
+
+    .load-segments {
+      display: grid;
+      grid-template-columns: repeat(var(--slots), minmax(0, 1fr));
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .load-segment {
+      height: 9px;
+      border-radius: 999px;
+      background: #e8edf3;
+      overflow: hidden;
+      position: relative;
+      outline: 1px solid rgba(15, 23, 42, .04);
+    }
+
+    .load-segment.filled {
+      background: #2f6bff;
+    }
+
+    .load-segment.release {
+      background: #58c4ae;
+    }
+
+    .load-segment.empty {
+      background: #edf1f6;
+    }
+
+    .load-segment.overflow {
+      background: #e95f70;
+    }
+
+    .load-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 7px;
+      color: #667085;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .load-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      max-width: 100%;
+    }
+
+    .load-legend i {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #2f6bff;
+      flex: 0 0 auto;
+    }
+
+    .load-legend .release-dot { background: #58c4ae; }
+    .load-legend .empty-dot { background: #d8dee8; }
+    .load-legend .overflow-dot { background: #e95f70; }
+
+    .load-detail {
+      margin-top: 7px;
+      display: grid;
+      gap: 4px;
+      color: #667085;
+      font-size: 11.5px;
+      line-height: 1.45;
+    }
+
+    .load-detail div {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .load-detail b {
+      color: var(--ink);
+      font-weight: 760;
+    }
+
+    .team-row .load-segments {
+      gap: 3px;
+    }
+
+    .team-row .load-segment {
+      height: 6px;
+    }
+
+    .team-row .load-legend,
+    .team-row .load-detail {
+      display: none;
+    }
+
+    /* Compact task dialog: fixed header/actions, scrollable form body */
+    .modal {
+      padding: 18px !important;
+      align-items: center !important;
+      justify-content: center !important;
+      overflow: hidden !important;
+    }
+
+    .dialog {
+      width: min(760px, calc(100vw - 36px)) !important;
+      max-height: calc(100vh - 36px) !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      display: grid !important;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .dialog-head {
+      margin: 0 !important;
+      padding: 14px 18px 12px !important;
+      border-bottom: 1px solid var(--line);
+      background: #ffffff;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .dialog h2 {
+      font-size: 16px !important;
+    }
+
+    #taskForm {
+      min-height: 0;
+      overflow-y: auto;
+      padding: 14px 18px 16px;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+    }
+
+    #taskForm .form-grid {
+      gap: 9px 12px !important;
+      align-content: start;
+    }
+
+    #taskForm .field {
+      gap: 4px !important;
+      font-size: 12px !important;
+    }
+
+    #taskForm .field input,
+    #taskForm .field select,
+    #taskForm .field textarea {
+      height: 34px;
+      padding: 7px 9px !important;
+      border-radius: 7px !important;
+      font-size: 12.5px;
+    }
+
+    #taskForm .field textarea {
+      height: 58px;
+      min-height: 58px !important;
+      resize: vertical;
+    }
+
+    #taskForm .dialog-actions {
+      margin: 12px -18px -16px !important;
+      padding: 12px 18px;
+      border-top: 1px solid var(--line);
+      background: #ffffff;
+      position: sticky;
+      bottom: 0;
+      z-index: 2;
+    }
+
+    .import-dialog {
+      max-width: 760px;
+    }
+
+    .import-help {
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.7;
+      margin: 0 0 10px;
+    }
+
+    .import-body {
+      padding: 14px 18px 16px;
+    }
+
+    .import-textarea {
+      width: 100%;
+      min-height: 260px;
+      resize: vertical;
+      border: 1px solid #d7dee8;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--ink);
+      background: #fff;
+      outline: none;
+      line-height: 1.55;
+    }
+
+    .import-textarea:focus {
+      border-color: #8fb3ff;
+      box-shadow: 0 0 0 3px rgba(59, 112, 231, .12);
+    }
+
+    .import-result {
+      min-height: 22px;
+      color: var(--muted);
+      font-size: 12.5px;
+      margin-top: 8px;
+    }
+
+    .import-result.ok { color: var(--green); }
+    .import-result.error { color: var(--red); }
+
+    /* Feishu-style grouped dispatch table */
+    #planner .planner-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    #planner .planner-main {
+      min-width: 0;
+    }
+
+    .dispatch-groups {
+      display: grid;
+      gap: 10px;
+    }
+
+    .dispatch-group {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .dispatch-group-head {
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 12px;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .dispatch-group-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .dispatch-group-title .chip {
+      height: 22px;
+    }
+
+    .dispatch-table-wrap {
+      overflow-x: hidden;
+    }
+
+    .dispatch-table {
+      width: 100%;
+      min-width: 0;
+      table-layout: fixed;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .dispatch-table th {
+      height: 34px;
+      background: #ffffff;
+      color: #667085;
+      font-size: 11.5px;
+      font-weight: 760;
+      white-space: nowrap;
+    }
+
+    .dispatch-table td {
+      height: 42px;
+      vertical-align: middle;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-left: 6px;
+      padding-right: 6px;
+    }
+
+    .dispatch-table tr[data-status-row="新需求"] td {
+      height: 82px;
+    }
+
+    .dispatch-task-title {
+      min-width: 0;
+      max-width: none;
+      white-space: normal;
+      line-height: 1.35;
+      overflow: hidden !important;
+      text-overflow: clip !important;
+    }
+
+    .inline-title-row {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 6px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .inline-id {
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .dispatch-task-title b {
+      color: var(--ink);
+    }
+
+    .dispatch-select {
+      width: 100%;
+      height: 30px;
+      border: 1px solid #d7dee8;
+      border-radius: 7px;
+      background: #fff;
+      color: var(--ink);
+      padding: 0 8px;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .dispatch-select:focus {
+      border-color: #8fb3ff;
+      box-shadow: 0 0 0 3px rgba(59, 112, 231, .12);
+    }
+
+    .dispatch-select.owner-select,
+    .dispatch-select.node-select,
+    .dispatch-select.current-owner-select,
+    .dispatch-select.priority-select {
+      width: 100%;
+    }
+
+    .dispatch-input {
+      width: 82px;
+      height: 30px;
+      border: 1px solid #d7dee8;
+      border-radius: 7px;
+      background: #fff;
+      color: var(--ink);
+      padding: 0 8px;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .dispatch-input.pd-input {
+      width: 100%;
+      text-align: center;
+    }
+
+    .dispatch-input.date-input {
+      width: 100%;
+    }
+
+    .dispatch-input:focus {
+      border-color: #8fb3ff;
+      box-shadow: 0 0 0 3px rgba(59, 112, 231, .12);
+    }
+
+    .dispatch-empty {
+      padding: 14px 12px;
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+
+    .inline-title {
+      width: 100%;
+      height: 28px;
+      border: 1px solid #d7dee8;
+      border-radius: 7px;
+      padding: 0 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+      outline: none;
+      min-width: 0;
+    }
+
+    .inline-title:focus {
+      border-color: #8fb3ff;
+      box-shadow: 0 0 0 3px rgba(59, 112, 231, .12);
+    }
+
+    .inline-subrow {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 5px;
+      margin-top: 5px;
+      padding-left: 40px;
+      min-width: 0;
+    }
+
+    .inline-subrow select {
+      width: 100%;
+      height: 24px;
+      border: 1px solid #d7dee8;
+      border-radius: 6px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 0 5px;
+      outline: none;
+    }
+
+    #planner td .mini-actions {
+      min-width: 0 !important;
+      max-width: 100%;
+      grid-template-columns: 1fr !important;
+      gap: 4px !important;
+    }
+
+    #planner .mini-actions button {
+      height: 28px !important;
+      padding: 0 6px !important;
+      font-size: 11.5px !important;
+    }
+
+    /* Top controls: keep command buttons readable when the window narrows */
+    .topbar {
+      grid-template-columns: minmax(0, 1fr) minmax(0, auto) !important;
+    }
+
+    .filters {
+      min-width: 0;
+      max-width: 100%;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      row-gap: 8px;
+    }
+
+    .filters select {
+      min-width: 112px !important;
+      max-width: 132px;
+      flex: 0 1 118px;
+    }
+
+    .filters .search {
+      min-width: 160px !important;
+      width: 180px !important;
+      flex: 0 1 180px;
+    }
+
+    .filters button,
+    .primary,
+    .secondary {
+      flex: 0 0 auto;
+      white-space: nowrap;
+      word-break: keep-all;
+      line-height: 1;
+    }
+
+    #openImport {
+      width: 116px;
+      padding: 0 10px;
+    }
+
+    #addInlineTask {
+      width: 108px;
+      padding: 0 10px;
+    }
+
+    .planner-action {
+      display: none !important;
+    }
+
+    body[data-view="planner"] .planner-action {
+      display: inline-flex !important;
+    }
+
+    @media (max-width: 1180px) {
+      body { min-width: 980px; }
+      .app-shell { grid-template-columns: 190px 1fr; }
+      .topbar {
+        grid-template-columns: 1fr !important;
+        align-items: start;
+      }
+      .filters {
+        justify-content: flex-start;
+      }
+      .metrics { grid-template-columns: repeat(3, 1fr); }
+      #dashboard .metrics { grid-template-columns: repeat(4, minmax(108px, 136px)) !important; }
+      .ops-grid { grid-template-columns: 1fr; }
+      .capacity-grid { grid-template-columns: repeat(2, 1fr); }
+      #capacity .capacity-grid { grid-template-columns: repeat(2, minmax(300px, 1fr)) !important; }
+      .weekly-grid { grid-template-columns: repeat(2, minmax(260px, 1fr)); }
+      .filters { flex-wrap: wrap; justify-content: flex-end; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">制</div>
+        <div>
+          <div class="brand-title">产能调度台</div>
+          <div class="brand-subtitle">接续 · 安排 · 分派 · 交付</div>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="主导航">
+        <button class="active" data-view="dashboard">总控台 <span>01</span></button>
+        <button data-view="planner">接需派单 <span>02</span></button>
+        <button data-view="kanban">制作流转 <span>03</span></button>
+        <button data-view="weekly">周任务清单 <span>04</span></button>
+        <button data-view="capacity">后期产能 <span>05</span></button>
+      </nav>
+
+      <div class="side-section">
+        <div class="side-heading">本周档期</div>
+        <div class="team-load" id="sideLoad"></div>
+      </div>
+
+      <div class="side-section">
+        <div class="side-heading">派单原则</div>
+        <div style="font-size:12px; line-height:1.8; color:#d7ddd7">
+          先接需，马上派给承接方；承接方反馈资料是否齐全，齐全后进入制作。
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="title">
+          <h1 id="pageTitle">总控台</h1>
+          <p>你的主流程：业务提需、派单承接、资料反馈、制作流转、审核交付。</p>
+        </div>
+        <div class="filters">
+          <input class="search" id="searchInput" placeholder="搜索课程 / 负责人 / 需求方">
+          <select id="businessFilter" aria-label="业务线筛选">
+            <option value="all">全部业务线</option>
+          </select>
+          <select id="teamFilter" aria-label="后期组筛选">
+            <option value="all">全部后期组</option>
+          </select>
+          <select id="priorityFilter" aria-label="优先级筛选">
+            <option value="all">全部优先级</option>
+            <option value="紧急">紧急</option>
+            <option value="高">高</option>
+            <option value="中">中</option>
+            <option value="低">低</option>
+          </select>
+          <button class="secondary planner-action" id="openImport" type="button">导入飞书表格</button>
+          <button class="primary planner-action" id="addInlineTask" type="button">＋ 新增一行</button>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="view active" id="dashboard">
+          <div class="metrics" id="metrics"></div>
+          <div class="flow-map">
+            <div class="flow-step"><b>1 接需收口</b><span>所有业务先进入新需求，先记录需求、交付时间、类型和优先级。</span></div>
+            <div class="flow-step"><b>2 派单承接</b><span>按任务类型和产能先派给成都制作团队、七子、千丝雨、专项外包或个人外包。</span></div>
+            <div class="flow-step"><b>3 承接方查资料</b><span>派单后由制作方检查脚本、录屏、PPT、参考样式；缺资料再停在待补资料。</span></div>
+            <div class="flow-step"><b>4 资料齐全开工</b><span>承接方确认资料没问题后进入制作中，你只盯交付和卡点。</span></div>
+            <div class="flow-step"><b>5 审核交付</b><span>初稿先进内审，再给业务审核；返修回流，终稿归档。</span></div>
+          </div>
+          <div class="ops-grid">
+            <section class="section">
+              <div class="section-head">
+                <h2>今日要盯</h2>
+                <small>按风险和截止时间排序</small>
+              </div>
+              <div class="todo-list" id="todayList"></div>
+            </section>
+            <section class="section">
+              <div class="section-head">
+                <h2>卡点与风险</h2>
+                <small>补资料、逾期、审核阻塞</small>
+              </div>
+              <div class="risk-list" id="riskList"></div>
+            </section>
+          </div>
+          <section class="section">
+            <div class="section-head">
+              <h2>业务线交付概览</h2>
+              <small>建议每周例会只看这张表</small>
+            </div>
+            <div class="table-wrap">
+              <table id="overviewTable"></table>
+            </div>
+          </section>
+        </div>
+
+        <div class="view" id="kanban">
+          <div class="kanban-toolbar">
+            <div>
+              <b>制作流转</b>
+              <span>默认隐藏已交付，避免历史任务占满看板</span>
+            </div>
+            <button class="secondary" id="toggleDelivered" type="button">查看已交付（0）</button>
+          </div>
+          <div class="kanban" id="kanbanBoard"></div>
+        </div>
+
+        <div class="view" id="planner">
+          <div class="planner-grid">
+            <section class="section planner-main">
+              <div class="section-head">
+                <h2>派单与资料反馈</h2>
+                <small>按状态分组，区分提需方和接需方，避免职责混淆</small>
+              </div>
+              <div class="planner-stack" id="plannerQueue"></div>
+            </section>
+          </div>
+        </div>
+
+        <div class="view legacy-view" id="demand" aria-hidden="true">
+          <div class="table-wrap">
+            <table id="demandTable"></table>
+          </div>
+        </div>
+
+        <div class="view legacy-view" id="schedule" aria-hidden="true">
+          <div class="table-wrap">
+            <table id="scheduleTable"></table>
+          </div>
+        </div>
+
+        <div class="view" id="weekly">
+          <div class="weekly-toolbar">
+            <div>
+              <h2 style="margin:0 0 5px;font-size:16px">月度周任务清单</h2>
+              <small style="color:var(--muted)">按每月 4 周预排，提前发现爆量、轮空和外包分配不均。</small>
+            </div>
+            <select id="monthSelect" aria-label="选择月份"></select>
+          </div>
+          <div class="weekly-grid" id="weeklyGrid"></div>
+        </div>
+
+        <div class="view" id="capacity">
+          <div class="capacity-grid" id="capacityGrid"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="dialog">
+      <div class="dialog-head">
+        <h2 id="modalTitle">新建制作任务</h2>
+        <button class="icon-btn" id="closeModal" aria-label="关闭">×</button>
+      </div>
+      <form id="taskForm">
+        <div class="form-grid">
+          <label class="field full">任务标题
+            <input name="title" required placeholder="例如：《Python入门》第4节 - 课程剪辑">
+          </label>
+          <label class="field">业务线
+            <select name="business" required></select>
+          </label>
+          <label class="field">任务类型
+            <select name="type" required></select>
+          </label>
+          <label class="field">需求方
+            <input name="requester" required placeholder="例如：课程组 / 运营组">
+          </label>
+          <label class="field">优先级
+            <select name="priority" required>
+              <option>中</option><option>高</option><option>紧急</option><option>低</option>
+            </select>
+          </label>
+          <label class="field">后期组
+            <select name="team" required></select>
+          </label>
+          <label class="field">负责人
+            <input name="owner" required placeholder="例如：刘婉琦">
+          </label>
+          <label class="field">制作人
+            <input name="maker" placeholder="公司外包可填实际制作人">
+          </label>
+          <label class="field">计划交付
+            <input type="date" name="due" required>
+          </label>
+          <label class="field">预计PD
+            <input type="number" name="estimatedPd" min="0" step="0.5" placeholder="例如：5">
+          </label>
+          <label class="field">计划开始
+            <input type="date" name="planStart">
+          </label>
+          <label class="field">制作窗口
+            <select name="slot">
+              <option>本周</option><option>下周</option><option>本月</option><option>待排期</option>
+            </select>
+          </label>
+          <label class="field">素材状态
+            <select name="material" required>
+              <option>齐全</option><option>缺脚本</option><option>缺录屏</option><option>缺PPT</option><option>待确认</option>
+            </select>
+          </label>
+          <label class="field full">资料链接
+            <input name="materialLink" placeholder="脚本 / 录屏 / PPT / 参考样式链接">
+          </label>
+          <label class="field">返修次数
+            <input type="number" name="reworkCount" min="0" step="1" value="0">
+          </label>
+          <label class="field">实际交付
+            <input type="date" name="actualDelivery">
+          </label>
+          <label class="field full">返修原因
+            <input name="reworkReason" placeholder="如有返修，记录原因和归因">
+          </label>
+          <label class="field full">制作要求
+            <textarea name="note" placeholder="写清楚验收标准、参考链接、是否需要字幕/包装/封面等"></textarea>
+          </label>
+        </div>
+        <div class="dialog-actions">
+          <button type="button" class="secondary" id="cancelModal">取消</button>
+          <button class="primary" type="submit">保存为新需求</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="importModal" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+    <div class="dialog import-dialog">
+      <div class="dialog-head">
+        <h2 id="importTitle">导入飞书表格</h2>
+        <button class="icon-btn" id="closeImport" aria-label="关闭">×</button>
+      </div>
+      <div class="import-body">
+        <p class="import-help">
+          从飞书 Base 表格复制包含表头的多行，粘贴到这里。会自动识别：名称、需求状态、提需方、优先级、提出时间、工作项排期、总估分、节点、资料链接等字段，并生成到接需派单的新需求。
+        </p>
+        <textarea class="import-textarea" id="importText" placeholder="示例：&#10;名称	需求状态	提需方	优先级	工作项排期	总估分&#10;《Python入门》第4节	研发阶段	张琦	P2	2026-07-22	5"></textarea>
+        <div class="import-result" id="importResult">粘贴后点击导入；重复标题会自动跳过。</div>
+        <div class="dialog-actions">
+          <button type="button" class="secondary" id="cancelImport">取消</button>
+          <button class="primary" type="button" id="runImport">识别并导入</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const statuses = ["新需求", "待派单", "待补资料", "制作中", "待内审", "待业务审核", "返修中", "已交付"];
+    const productionStatuses = ["制作中", "待内审", "待业务审核", "返修中", "已交付"];
+    const intakeStatuses = ["新需求"];
+    const dispatchStatuses = ["待派单", "待补资料"];
+    const businesses = ["C++", "硬件课", "S高", "BtoC", "Python", "趣味C++", "赛事课", "UI素材替换", "公益课"];
+    const teams = ["成都制作团队", "七子", "千丝雨", "光影", "个人外包", "音频外包公司", "短剧拍摄外包公司"];
+    const types = ["课程剪辑", "讲解视频后期", "PPT美化", "课程封面", "配音录制", "字幕头像", "返修", "包装"];
+    const teamCapacity = [
+      { name: "成都制作团队", coordinator: "仲勤", members: "刘婉琦 / 卢晓玲 / 罗环宇 / 谢银银 / 曾耀", capacity: 3, pd: 30, assigned: 3, delivered: 2, overdue: 1, fit: "仲勤负责统筹排产；制作团队每周 3 节，约 30PD；优先紧急、复杂、关键课程和高返修任务" },
+      { name: "七子", coordinatorLabel: "对接", coordinator: "王爱东", members: "外包公司", capacity: 3, assigned: 2, delivered: 2, overdue: 1, fit: "常规每周 3 节；适合批量课程剪辑、常规包装、成套课节" },
+      { name: "千丝雨", coordinatorLabel: "对接", coordinator: "杨智浩", members: "外包公司", capacity: 3, assigned: 2, delivered: 1, overdue: 1, fit: "常规每周 3 节；适合讲解视频后期、字幕、录屏课制作" },
+      { name: "光影", members: "外包公司", capacity: 0, reserve: 1, emergencyOnly: true, assigned: 0, delivered: 0, overdue: 0, fit: "紧急备用，不作为常规产能；只在爆量或急单时启用" },
+      { name: "个人外包", members: "王伟 / 王帅 / 张明", capacity: 3, assigned: 2, delivered: 1, overdue: 0, fit: "合计每周 3 节；适合封面、头像、轻剪辑、零散修图与补位" },
+      { name: "音频外包公司", members: "专项外包公司", capacity: 5, assigned: 0, delivered: 0, overdue: 0, fit: "专项承接音频处理、配音录制、音频修正；默认每周 5 节，排产前确认音色、格式和交付标准" },
+      { name: "短剧拍摄外包公司", members: "专项外包公司", capacity: 2, assigned: 0, delivered: 0, overdue: 0, fit: "专项承接短剧拍摄、切片视频、轻量包装；默认每周 2 节，适合批量短内容和临时补位" }
+    ];
+    const teamPeople = {
+      "成都制作团队": ["刘婉琦", "卢晓玲", "罗环宇", "谢银银", "曾耀"],
+      "七子": ["王爱东"],
+      "千丝雨": ["杨智浩"],
+      "光影": ["光影对接人"],
+      "个人外包": ["王伟", "王帅", "张明"],
+      "音频外包公司": ["音频外包对接人"],
+      "短剧拍摄外包公司": ["短剧拍摄对接人"]
+    };
+    const teamShortNames = {
+      "成都制作团队": "成都",
+      "七子": "七子",
+      "千丝雨": "千丝雨",
+      "光影": "光影",
+      "个人外包": "个人",
+      "音频外包公司": "音频",
+      "短剧拍摄外包公司": "短剧拍摄"
+    };
+    const teachingRequesters = ["张琦", "肖尹", "田鹏伟"];
+
+    const seedTasks = [
+      { id: "XQ-001", title: "《Python入门》第3节 - 变量与数据类型", business: "Python", requester: "课程研发", type: "课程剪辑", priority: "紧急", team: "成都制作团队", owner: "刘婉琦", status: "制作中", due: "2026-07-15", planStart: "2026-07-13", slot: "本周", progress: 62, material: "齐全", note: "需保留代码演示节奏，字幕按课程标准版。" },
+      { id: "XQ-002", title: "《Python入门》第5-7节 - 配音与字幕", business: "Python", requester: "教研组", type: "配音录制", priority: "高", team: "七子", owner: "王爱东", status: "制作中", due: "2026-07-18", planStart: "2026-07-14", slot: "本周", progress: 35, material: "齐全", note: "统一音色，交付 wav 和压制版。" },
+      { id: "XQ-003", title: "《趣味C++》L9-2 A0 - 讲解视频后期", business: "趣味C++", requester: "课程研发", type: "讲解视频后期", priority: "中", team: "千丝雨", owner: "杨智浩", status: "待内审", due: "2026-07-16", planStart: "2026-07-12", slot: "本周", progress: 90, material: "齐全", note: "检查录屏与人像切换。" },
+      { id: "XQ-004", title: "《趣味C++》第二阶段 - 全向车包装", business: "趣味C++", requester: "产品组", type: "包装", priority: "高", team: "成都制作团队", owner: "卢晓玲", status: "待业务审核", due: "2026-07-17", planStart: "2026-07-13", slot: "本周", progress: 100, material: "齐全", note: "业务方确认片头片尾。" },
+      { id: "XQ-005", title: "《Office高效办公》系列 - 整体包装", business: "BtoC", requester: "运营组", type: "包装", priority: "中", team: "光影", owner: "光影对接人", status: "新需求", due: "2026-08-12", planStart: "", slot: "待排期", progress: 0, material: "待确认", note: "需确认品牌色和片头模板。" },
+      { id: "XQ-006", title: "《AI绘画变现》第1节 - 配音录制", business: "S高", requester: "内容组", type: "配音录制", priority: "高", team: "成都制作团队", owner: "罗环宇", status: "待业务审核", due: "2026-07-14", planStart: "2026-07-11", slot: "本周", progress: 100, material: "齐全", note: "等待讲师确认术语读法。" },
+      { id: "XQ-007", title: "《数据分析》讲师头像生成", business: "S高", requester: "课程研发", type: "字幕头像", priority: "中", team: "个人外包", owner: "王伟", status: "待排产", due: "2026-07-20", planStart: "", slot: "本周", progress: 8, material: "齐全", note: "三版头像风格供选。" },
+      { id: "XQ-008", title: "《电商直播》课程封面头像", business: "BtoC", requester: "运营组", type: "课程封面", priority: "紧急", team: "个人外包", owner: "王帅", status: "待排产", due: "2026-07-16", planStart: "", slot: "本周", progress: 8, material: "齐全", note: "要适配站内横图和竖图。" },
+      { id: "XQ-009", title: "《机器人传感器》L2 - 录屏课剪辑", business: "硬件课", requester: "硬件课组", type: "课程剪辑", priority: "中", team: "千丝雨", owner: "杨智浩", status: "待补资料", due: "2026-07-19", planStart: "", slot: "待排期", progress: 0, material: "缺录屏", note: "缺少第2段实验录屏。" },
+      { id: "XQ-010", title: "UI素材替换 - 课程封面批量更新", business: "UI素材替换", requester: "设计组", type: "课程封面", priority: "低", team: "个人外包", owner: "张明", status: "制作中", due: "2026-07-27", planStart: "2026-07-15", slot: "本月", progress: 20, material: "齐全", note: "按新模板替换 12 张封面。" },
+      { id: "XQ-011", title: "赛事课报名页视频 - 初剪返修", business: "赛事课", requester: "市场组", type: "返修", priority: "高", team: "成都制作团队", owner: "谢银银", status: "返修中", due: "2026-07-13", planStart: "2026-07-13", slot: "本周", progress: 70, material: "齐全", note: "缩短至 90 秒，强化报名引导。" },
+      { id: "XQ-012", title: "公益课宣传短片 - 需求评估", business: "公益课", requester: "公益项目组", type: "课程剪辑", priority: "低", team: "光影", owner: "待定", status: "待评估", due: "2026-08-03", planStart: "", slot: "待排期", progress: 0, material: "缺脚本", note: "先确认受众和发布渠道。" }
+    ];
+
+    let tasks = JSON.parse(localStorage.getItem("videoBoardTasks") || "null") || seedTasks;
+    let selectedTaskId = "";
+    let showDelivered = false;
+    const teamNameMap = {
+      "内部组": "成都制作团队",
+      "外包A": "七子",
+      "外包B": "千丝雨",
+      "短句视频外包公司": "短剧拍摄外包公司"
+    };
+    const statusNameMap = {
+      "需求池": "新需求",
+      "待安排": "待派单",
+      "待分配": "待派单",
+      "待评估": "待派单",
+      "待排产": "待派单"
+    };
+    const chengduOwnerMap = {
+      "张明": "刘婉琦",
+      "陈贝": "卢晓玲",
+      "李伟": "罗环宇",
+      "待定": "曾耀"
+    };
+    const teamOwnerMap = {
+      "成都制作团队": chengduOwnerMap,
+      "七子": {
+        "王刚": "王爱东",
+        "待定": "王爱东"
+      },
+      "千丝雨": {
+        "赵磊": "杨智浩",
+        "待定": "杨智浩"
+      },
+      "个人外包": {
+        "陈晨": "王伟",
+        "待定": "王帅"
+      }
+    };
+    tasks = tasks.map(task => {
+      const team = teamNameMap[task.team] || task.team;
+      const ownerMap = teamOwnerMap[team] || {};
+      const owner = ownerMap[task.owner] || task.owner || "";
+      return {
+        planStart: "",
+        slot: "待排期",
+        ...task,
+        team,
+        owner,
+        requester: teachingRequesters.includes(task.requester) ? task.requester : "张琦",
+        maker: task.maker || owner,
+        estimatedPd: Number(task.estimatedPd ?? defaultPd(task.type)),
+        materialLink: task.materialLink || "",
+        actualDelivery: task.actualDelivery || "",
+        reworkCount: Number(task.reworkCount ?? (task.status === "返修中" ? 1 : 0)),
+        reworkReason: task.reworkReason || (task.status === "返修中" ? task.note : ""),
+        status: statusNameMap[task.status] || task.status
+      };
+    });
+    localStorage.setItem("videoBoardTasks", JSON.stringify(tasks));
+    if (!tasks.some(task => task.status === "待派单")) {
+      tasks.unshift(
+        { id: "013", title: "《C++项目课》L10-4 A0 - 讲解视频派单", business: "C++", requester: "课程研发", type: "讲解视频后期", priority: "高", team: "成都制作团队", owner: "曾耀", status: "待派单", due: "2026-07-18", planStart: "", slot: "本周", progress: 12, material: "待确认", note: "先派给成都制作团队，承接方确认资料是否齐全。" },
+        { id: "014", title: "《BtoC直播课》切片包装 - 批量派单", business: "BtoC", requester: "运营组", type: "包装", priority: "中", team: "七子", owner: "王爱东", status: "待派单", due: "2026-07-25", planStart: "", slot: "下周", progress: 12, material: "待确认", note: "适合外包公司批量处理，派单后由对接人反馈资料完整性。" }
+      );
+      save();
+    }
+    if (localStorage.getItem("videoBoardIdScheme") !== "NUMERIC_SEQ") {
+      tasks = tasks.map((task, index) => ({
+        ...task,
+        id: String(index + 1).padStart(3, "0")
+      }));
+      localStorage.setItem("videoBoardIdScheme", "NUMERIC_SEQ");
+      save();
+    }
+
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+    function save() {
+      localStorage.setItem("videoBoardTasks", JSON.stringify(tasks));
+    }
+
+    function filteredTasks() {
+      const q = $("#searchInput").value.trim().toLowerCase();
+      const b = $("#businessFilter").value;
+      const t = $("#teamFilter").value;
+      const p = $("#priorityFilter").value;
+      return tasks.filter(task => {
+        const text = [task.title, task.owner, task.maker, task.requester, task.id, task.type, task.materialLink].join(" ").toLowerCase();
+        return (!q || text.includes(q))
+          && (b === "all" || task.business === b)
+          && (t === "all" || task.team === t)
+          && (p === "all" || task.priority === p);
+      });
+    }
+
+    function defaultPd(type) {
+      if (["课程封面", "字幕头像"].includes(type)) return 1;
+      if (["PPT美化", "配音录制"].includes(type)) return 2;
+      if (["包装", "返修"].includes(type)) return 3;
+      if (type === "讲解视频后期") return 6;
+      return 5;
+    }
+
+    function todayISO() {
+      const now = new Date();
+      const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+      return local.toISOString().slice(0, 10);
+    }
+
+    function shortLink(url) {
+      if (!url) return "-";
+      return `<a href="${url}" target="_blank" rel="noopener">打开资料</a>`;
+    }
+
+    function chipClass(value) {
+      if (value === "紧急") return "red";
+      if (value === "高") return "amber";
+      if (value === "中") return "blue";
+      if (value === "低") return "green";
+      if (value.includes("成都")) return "blue";
+      if (value.includes("七子")) return "amber";
+      if (value.includes("千丝雨")) return "teal";
+      if (value.includes("光影")) return "green";
+      if (value.includes("个人")) return "violet";
+      if (value.includes("音频")) return "teal";
+      if (value.includes("短剧")) return "violet";
+      return "";
+    }
+
+    function dateGap(due) {
+      const today = new Date(todayISO() + "T00:00:00");
+      const target = new Date(due + "T00:00:00");
+      return Math.ceil((target - today) / 86400000);
+    }
+
+    function nextTaskId() {
+      const max = tasks.reduce((num, task) => {
+        const match = String(task.id || "").match(/^(?:XQ-)?(\d+)$/);
+        return match ? Math.max(num, Number(match[1])) : num;
+      }, 0);
+      return String(max + 1).padStart(3, "0");
+    }
+
+    function addDaysISO(days) {
+      const date = new Date(todayISO() + "T00:00:00");
+      date.setDate(date.getDate() + days);
+      const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+      return local.toISOString().slice(0, 10);
+    }
+
+    function normalizePriority(value) {
+      const text = String(value || "").trim().toUpperCase();
+      if (["P0", "紧急", "最高"].some(key => text.includes(key))) return "紧急";
+      if (["P1", "高"].some(key => text.includes(key))) return "高";
+      if (["P2", "中"].some(key => text.includes(key))) return "中";
+      if (["P3", "P4", "低"].some(key => text.includes(key))) return "低";
+      return "中";
+    }
+
+    function inferType(text) {
+      const value = String(text || "");
+      if (/配音|音频|录音/.test(value)) return "配音录制";
+      if (/头像|字幕/.test(value)) return "字幕头像";
+      if (/封面|头图/.test(value)) return "课程封面";
+      if (/PPT|美化/.test(value)) return "PPT美化";
+      if (/包装|切片|短剧/.test(value)) return "包装";
+      if (/返修|修改/.test(value)) return "返修";
+      if (/讲解|录屏|后期/.test(value)) return "讲解视频后期";
+      return "课程剪辑";
+    }
+
+    function inferBusiness(text) {
+      const value = String(text || "");
+      return businesses.find(item => value.includes(item)) || "C++";
+    }
+
+    function inferTaskFieldsFromTitle(task) {
+      task.business = inferBusiness(task.title);
+      task.type = inferType(task.title);
+      task.estimatedPd = task.estimatedPd || defaultPd(task.type);
+    }
+
+    function teamLabel(team) {
+      return teamShortNames[team] || team || "-";
+    }
+
+    function teamOptionList(selected) {
+      return teams.map(value => `<option value="${value}" ${value === selected ? "selected" : ""}>${teamLabel(value)}</option>`).join("");
+    }
+
+    function teamSortWeight(team) {
+      const index = teams.indexOf(team);
+      return index >= 0 ? index : teams.length;
+    }
+
+    function priorityWeight(priority) {
+      return { "紧急": 0, "高": 1, "中": 2, "低": 3 }[priority] ?? 4;
+    }
+
+    function parseDateValue(value) {
+      const text = String(value || "").trim();
+      const fullDates = [...text.matchAll(/(20\d{2})[\/.-](\d{1,2})[\/.-](\d{1,2})/g)];
+      const shortDates = [...text.matchAll(/(?<!\d)(\d{1,2})[\/.-](\d{1,2})(?!\d)/g)];
+      const match = fullDates.at(-1);
+      if (match) return `${match[1]}-${String(match[2]).padStart(2, "0")}-${String(match[3]).padStart(2, "0")}`;
+      const short = shortDates.at(-1);
+      if (short) return `${todayISO().slice(0, 4)}-${String(short[1]).padStart(2, "0")}-${String(short[2]).padStart(2, "0")}`;
+      return addDaysISO(7);
+    }
+
+    function parseNumberValue(value, fallback = 5) {
+      const match = String(value || "").match(/\d+(?:\.\d+)?/);
+      return match ? Number(match[0]) : fallback;
+    }
+
+    function findHeaderIndex(headers, aliases) {
+      return headers.findIndex(header => aliases.some(alias => header.includes(alias)));
+    }
+
+    function importCell(row, headers, aliases) {
+      const index = findHeaderIndex(headers, aliases);
+      return index >= 0 ? (row[index] || "").trim() : "";
+    }
+
+    function parseFeishuPaste(raw) {
+      const lines = String(raw || "").split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+      if (lines.length < 2) return [];
+      const delimiter = lines[0].includes("\t") ? "\t" : ",";
+      const rows = lines.map(line => line.split(delimiter).map(cell => cell.trim()));
+      const headers = rows.shift().map(header => header.replace(/\s+/g, ""));
+      return rows.map(row => {
+        const title = importCell(row, headers, ["名称", "需求标题", "课程名称", "标题", "任务", "需求名称"]);
+        if (!title) return null;
+        const businessText = importCell(row, headers, ["业务线", "科目", "项目", "分类"]) || title;
+        const typeText = importCell(row, headers, ["类型", "节点", "进行中节点", "需求状态"]) || title;
+        const requester = importCell(row, headers, ["提需方", "需求方", "创建者", "提出人", "当前负责人", "负责人"]) || "张琦";
+        const priority = normalizePriority(importCell(row, headers, ["优先级", "P级", "等级"]));
+        const due = parseDateValue(importCell(row, headers, ["工作项排期", "排期", "计划交付", "交付", "截止时间", "完成时间"]));
+        const estimatedPd = parseNumberValue(importCell(row, headers, ["总估分", "预计PD", "PD", "估分", "工时"]), defaultPd(inferType(typeText)));
+        const note = importCell(row, headers, ["备注", "说明", "需求说明", "描述"]) || importCell(row, headers, ["需求状态", "进行中节点", "节点"]);
+        const materialLink = importCell(row, headers, ["资料", "资料链接", "链接", "附件"]);
+        return {
+          title,
+          business: inferBusiness(businessText),
+          requester,
+          type: inferType(typeText),
+          priority,
+          team: "成都制作团队",
+          owner: "刘婉琦",
+          maker: "刘婉琦",
+          status: "新需求",
+          due,
+          progress: 0,
+          material: materialLink ? "待确认" : "待确认",
+          planStart: "",
+          slot: "待排期",
+          estimatedPd,
+          materialLink,
+          actualDelivery: "",
+          reworkCount: 0,
+          reworkReason: "",
+          note: note || "从飞书表格导入，待确认制作要求。"
+        };
+      }).filter(Boolean);
+    }
+
+    function createInlineTask() {
+      const defaultTeam = "成都制作团队";
+      const defaultOwner = ownerOptionsForTeam(defaultTeam)[0] || "待定";
+      const business = $("#businessFilter")?.value && $("#businessFilter").value !== "all" ? $("#businessFilter").value : "C++";
+      return {
+        id: nextTaskId(),
+        title: "输入课程或任务名称",
+        business,
+        requester: "张琦",
+        type: "课程剪辑",
+        priority: "中",
+        team: defaultTeam,
+        owner: defaultOwner,
+        maker: defaultOwner,
+        status: "新需求",
+        due: addDaysISO(7),
+        progress: 0,
+        material: "待确认",
+        planStart: "",
+        slot: "待排期",
+        estimatedPd: defaultPd("课程剪辑"),
+        materialLink: "",
+        actualDelivery: "",
+        reworkCount: 0,
+        reworkReason: "",
+        note: "新增行，待补充制作要求。"
+      };
+    }
+
+    function tStageWeight(status) {
+      const weights = { "新需求": 6, "待派单": 5, "待补资料": 4, "返修中": 3, "制作中": 2 };
+      return weights[status] || 1;
+    }
+
+    function renderMetrics(list) {
+      const urgent = list.filter(t => t.priority === "紧急").length;
+      const intake = list.filter(t => intakeStatuses.includes(t.status)).length;
+      const assigning = list.filter(t => t.status === "待派单").length;
+      const making = list.filter(t => t.status === "制作中").length;
+      const overdue = list.filter(t => dateGap(t.due) < 0 && t.status !== "已交付").length;
+      const review = list.filter(t => ["待内审", "待业务审核"].includes(t.status)).length;
+      const blocked = list.filter(t => t.status === "待补资料" || t.material !== "齐全").length;
+      const data = [
+        { label: "新需求", value: intake, status: "新需求", view: "planner" },
+        { label: "待派单", value: assigning, status: "待派单", view: "planner" },
+        { label: "待补资料", value: blocked, status: "待补资料", view: "planner" },
+        { label: "制作中", value: making, status: "制作中", view: "kanban" },
+        { label: "待审核", value: review, status: "待内审", view: "kanban" },
+        { label: "紧急", value: urgent, priority: "紧急", view: "kanban" }
+      ];
+      $("#metrics").innerHTML = data.map(item => `<button class="metric" data-metric-view="${item.view}" data-metric-status="${item.status || ""}" data-metric-priority="${item.priority || ""}"><b>${item.value}</b><span>${item.label}</span></button>`).join("");
+      if (overdue > 0) $("#metrics").insertAdjacentHTML("beforeend", `<button class="metric" data-metric-view="kanban" data-metric-overdue="1"><b style="color:var(--red)">${overdue}</b><span>已逾期</span></button>`);
+    }
+
+    function renderDashboard() {
+      const list = filteredTasks();
+      renderMetrics(list);
+      const today = [...list]
+        .filter(t => t.status !== "已交付")
+        .sort((a, b) => {
+          const stageA = tStageWeight(a.status);
+          const stageB = tStageWeight(b.status);
+          return stageB - stageA || dateGap(a.due) - dateGap(b.due) || (b.priority === "紧急") - (a.priority === "紧急");
+        })
+        .slice(0, 6);
+      $("#todayList").innerHTML = today.map(t => `
+        <div class="todo-item" data-task-id="${t.id}">
+          <span class="dot ${t.priority === "紧急" ? "red" : dateGap(t.due) <= 2 ? "amber" : "teal"}"></span>
+          <div><b>${t.status}｜${t.title}</b><br><span style="color:var(--muted)">${t.business} · ${teamLabel(t.team)} · ${t.owner} · ${t.slot}</span></div>
+          <span class="chip ${chipClass(t.priority)}">${t.due}</span>
+        </div>
+      `).join("");
+
+      const risks = list.filter(t => t.status === "待补资料" || t.material !== "齐全" || dateGap(t.due) <= 1 || t.status === "返修中").slice(0, 6);
+      $("#riskList").innerHTML = risks.map(t => `
+        <div class="risk-item" data-task-id="${t.id}">
+          <span class="dot ${t.status === "返修中" ? "red" : "amber"}"></span>
+          <div><b>${t.id}</b> ${t.note}<br><span style="color:var(--muted)">${t.title}</span></div>
+          <span class="chip ${chipClass(t.material === "齐全" ? t.priority : "紧急")}">${t.material}</span>
+        </div>
+      `).join("");
+
+      const rows = businesses.map(b => {
+        const items = list.filter(t => t.business === b);
+        if (!items.length) return "";
+        const active = items.filter(t => !["已交付"].includes(t.status)).length;
+        const arrange = items.filter(t => t.status === "待派单").length;
+        const review = items.filter(t => ["待内审", "待业务审核"].includes(t.status)).length;
+        const risk = items.filter(t => t.status === "待补资料" || dateGap(t.due) <= 1).length;
+        const nextDue = items.filter(t => t.status !== "已交付").sort((a,b)=>a.due.localeCompare(b.due))[0]?.due || "-";
+        return `<tr><td><b>${b}</b></td><td>${items.length}</td><td>${active}</td><td>${arrange}</td><td>${review}</td><td>${risk}</td><td>${nextDue}</td></tr>`;
+      }).join("");
+      $("#overviewTable").innerHTML = `<thead><tr><th>业务线</th><th>总任务</th><th>未交付</th><th>待派单</th><th>待审核</th><th>风险</th><th>最近交付</th></tr></thead><tbody>${rows}</tbody>`;
+    }
+
+    function renderCard(t) {
+      const dueText = dateGap(t.due) < 0 ? "已逾期" : t.due.slice(5);
+      const maker = t.maker || t.owner || "待定";
+      const teamTone = chipClass(t.team);
+      return `
+        <article class="task-card" draggable="true" data-id="${t.id}">
+          <div class="task-card-head">
+            <span class="task-code">${t.id} · ${t.business}</span>
+            <span class="due-pill">${dueText}</span>
+          </div>
+          <div class="task-title">${t.title}</div>
+          <div class="kanban-tags">
+            <div class="team-progress ${teamTone}" style="--p:${t.progress}%"><span>${teamLabel(t.team)} - ${maker}</span></div>
+            <span class="chip ${chipClass(t.priority)}">${t.priority}</span>
+          </div>
+          <div class="kanban-foot">
+            <span>${t.type}${t.reworkCount ? ` · 返修${t.reworkCount}` : ""}</span>
+            <span>${t.estimatedPd}PD · ${t.material}</span>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderKanban() {
+      const list = filteredTasks();
+      const deliveredCount = list.filter(t => t.status === "已交付").length;
+      const visibleStatuses = showDelivered ? productionStatuses : productionStatuses.filter(status => status !== "已交付");
+      $("#toggleDelivered").textContent = showDelivered ? `隐藏已交付（${deliveredCount}）` : `查看已交付（${deliveredCount}）`;
+      $("#kanbanBoard").style.setProperty("--kanban-cols", visibleStatuses.length);
+      $("#kanbanBoard").innerHTML = visibleStatuses.map(status => {
+        const items = list
+          .filter(t => t.status === status)
+          .sort((a, b) =>
+            teamSortWeight(a.team) - teamSortWeight(b.team)
+            || priorityWeight(a.priority) - priorityWeight(b.priority)
+            || (a.due || "").localeCompare(b.due || "")
+            || String(a.id).localeCompare(String(b.id), "zh-CN", { numeric: true })
+          );
+        return `
+          <section class="column">
+            <div class="column-head">${status}<span class="count">${items.length}</span></div>
+            <div class="dropzone" data-status="${status}">${items.map(renderCard).join("")}</div>
+          </section>
+        `;
+      }).join("");
+      wireDrag();
+    }
+
+    function renderDemand() {
+      const list = filteredTasks().filter(t => intakeStatuses.includes(t.status));
+      $("#demandTable").innerHTML = `
+        <thead><tr><th>需求编号</th><th>业务线</th><th>需求标题</th><th>需求方</th><th>类型</th><th>优先级</th><th>素材状态</th><th>资料链接</th><th>计划交付</th><th>接需动作</th></tr></thead>
+        <tbody>${list.map(t => `<tr data-id="${t.id}"><td><b>${t.id}</b></td><td>${t.business}</td><td>${t.title}</td><td>${t.requester}</td><td>${t.type}</td><td><span class="chip ${chipClass(t.priority)}">${t.priority}</span></td><td>${t.material}</td><td>${shortLink(t.materialLink)}</td><td>${t.due}</td><td>${plannerActions(t)}</td></tr>`).join("")}</tbody>
+      `;
+    }
+
+    function renderSchedule() {
+      const list = filteredTasks().sort((a,b)=>a.business.localeCompare(b.business, "zh-CN") || a.due.localeCompare(b.due));
+      $("#scheduleTable").innerHTML = `
+        <thead><tr><th>业务线</th><th>课程 / 任务</th><th>任务类型</th><th>任务ID</th><th>制作窗口</th><th>预计PD</th><th>计划开始</th><th>后期组</th><th>负责人</th><th>制作人</th><th>计划交付</th><th>实际交付</th><th>返修</th><th>状态</th><th>备注</th></tr></thead>
+        <tbody>${list.map(t => `<tr><td><b>${t.business}</b></td><td>${t.title}</td><td>${t.type}</td><td>${t.id}</td><td>${t.slot}</td><td>${t.estimatedPd}</td><td>${t.planStart || "-"}</td><td>${teamLabel(t.team)}</td><td>${t.owner}</td><td>${t.maker || "-"}</td><td>${t.due}</td><td>${t.actualDelivery || "-"}</td><td>${t.reworkCount || 0}</td><td>${t.status}</td><td>${t.note}</td></tr>`).join("")}</tbody>
+      `;
+    }
+
+    function currentNode(task) {
+      if (task.status === "新需求") return "待确认承接方";
+      if (task.status === "待派单") return "待承接方查资料";
+      if (task.status === "待补资料") return task.material && task.material !== "齐全" ? `待补${task.material.replace("缺", "")}` : "待业务补资料";
+      if (task.status === "制作中") return "制作进行中";
+      if (task.status === "待内审") return "待内部审核";
+      if (task.status === "待业务审核") return "待业务验收";
+      if (task.status === "返修中") return task.reworkReason || "待返修提交";
+      if (task.status === "已交付") return "已交付归档";
+      return task.status;
+    }
+
+    function currentOwner(task) {
+      return teachingRequesters.includes(task.requester) ? task.requester : "张琦";
+    }
+
+    function optionList(values, selected) {
+      return values.map(value => `<option value="${value}" ${value === selected ? "selected" : ""}>${value}</option>`).join("");
+    }
+
+    function uniqueOptions(values) {
+      return values.filter(Boolean).filter((value, index, arr) => arr.indexOf(value) === index);
+    }
+
+    function nodeOptionsForStatus(status, task) {
+      if (status === "新需求") return ["待确认承接方", "待补充需求信息", "待确认交付时间", "可进入派单"];
+      if (status === "待派单") return ["待承接方查资料", "承接方确认中", "待反馈资料问题", "可开工"];
+      if (status === "待补资料") {
+        const materialNode = task.material && task.material !== "齐全" ? `待补${task.material.replace("缺", "")}` : "待业务补资料";
+        return uniqueOptions([materialNode, "待业务补资料", "待补脚本", "待补录屏", "待补PPT", "资料已补待确认"]);
+      }
+      return [currentNode(task)];
+    }
+
+    function ownerOptionsForTeam(team) {
+      return teamPeople[team] || ["待定"];
+    }
+
+    function coordinatorForTeam(team) {
+      return teamCapacity.find(item => item.name === team)?.coordinator || "";
+    }
+
+    function currentOwnerOptions(task) {
+      const requester = currentOwner(task);
+      return uniqueOptions([requester, ...teachingRequesters]);
+    }
+
+    function renderNodeCell(t) {
+      const current = t.currentNode || currentNode(t);
+      return `<select class="dispatch-select node-select" data-inline-field="currentNode" data-id="${t.id}">${optionList(nodeOptionsForStatus(t.status, t), current)}</select>`;
+    }
+
+    function renderCurrentOwnerCell(t) {
+      const current = t.currentOwner || currentOwner(t) || "-";
+      const options = uniqueOptions([current, ...currentOwnerOptions(t)]);
+      return `<select class="dispatch-select current-owner-select" data-inline-field="currentOwner" data-id="${t.id}">${optionList(options, current)}</select>`;
+    }
+
+    function renderTeamCell(t) {
+      if (t.status !== "新需求") return teamLabel(t.team);
+      return `<select class="dispatch-select" data-inline-field="team" data-id="${t.id}">${teamOptionList(t.team)}</select>`;
+    }
+
+    function renderOwnerCell(t) {
+      if (t.status !== "新需求") return t.maker || t.owner || "-";
+      const owners = ownerOptionsForTeam(t.team);
+      const current = owners.includes(t.owner) ? t.owner : owners[0];
+      return `<select class="dispatch-select owner-select" data-inline-field="owner" data-id="${t.id}">${optionList(owners, current)}</select>`;
+    }
+
+    function renderPriorityCell(t) {
+      if (t.status !== "新需求") return `<span class="chip ${chipClass(t.priority)}">${t.priority}</span>`;
+      return `<select class="dispatch-select priority-select" data-inline-field="priority" data-id="${t.id}">${optionList(["紧急", "高", "中", "低"], t.priority)}</select>`;
+    }
+
+    function renderPdCell(t) {
+      if (t.status !== "新需求") return t.estimatedPd;
+      return `<input class="dispatch-input pd-input" type="number" min="0" step="0.5" value="${t.estimatedPd}" data-inline-field="estimatedPd" data-id="${t.id}" aria-label="预计PD">`;
+    }
+
+    function renderDueCell(t) {
+      if (t.status !== "新需求") return t.due;
+      return `<input class="dispatch-input date-input" type="date" value="${t.due}" data-inline-field="due" data-id="${t.id}" aria-label="交付日期">`;
+    }
+
+    function renderTitleCell(t) {
+      if (t.status !== "新需求") {
+        return `<b>${t.id}</b> ${t.title}<br><span style="color:var(--muted)">${t.business} · ${t.type}</span>`;
+      }
+      return `
+        <div class="inline-title-row">
+          <span class="inline-id">${t.id}</span>
+          <input class="inline-title" value="${t.title}" data-inline-field="title" data-id="${t.id}" aria-label="任务标题">
+        </div>
+        <div class="inline-subrow">
+          <select data-inline-field="business" data-id="${t.id}" aria-label="课程模块">${optionList(businesses, t.business)}</select>
+          <select data-inline-field="type" data-id="${t.id}" aria-label="类型">${optionList(types, t.type)}</select>
+        </div>
+      `;
+    }
+
+    function renderPlanner() {
+      const list = filteredTasks()
+        .filter(t => ["新需求", ...dispatchStatuses].includes(t.status))
+        .sort((a, b) => tStageWeight(b.status) - tStageWeight(a.status) || dateGap(a.due) - dateGap(b.due));
+      const groups = ["新需求", "待派单", "待补资料"];
+      $("#plannerQueue").innerHTML = `<div class="dispatch-groups">${groups.map(status => {
+        const items = list.filter(t => t.status === status);
+        return `
+          <section class="dispatch-group">
+            <div class="dispatch-group-head">
+              <div class="dispatch-group-title">
+                <span class="chip ${status === "待补资料" ? "amber" : "blue"}">${status}</span>
+                <span>共 ${items.length} 个</span>
+              </div>
+              <small style="color:var(--muted)">${status === "新需求" ? "待收口后进入派单" : status === "待派单" ? "承接方查资料并反馈" : "业务补齐资料后开工"}</small>
+            </div>
+            ${items.length ? `
+              <div class="dispatch-table-wrap">
+                <table class="dispatch-table">
+                  <colgroup>
+                    <col style="width:27%">
+                    <col style="width:12%">
+                    <col style="width:10%">
+                    <col style="width:6%">
+                    <col style="width:12%">
+                    <col style="width:9%">
+                    <col style="width:5%">
+                    <col style="width:10%">
+                    <col style="width:9%">
+                  </colgroup>
+                  <thead><tr><th>名称</th><th>当前节点</th><th>提需方</th><th>优先级</th><th>承接团队</th><th>接需方</th><th>PD</th><th>交付</th><th>操作</th></tr></thead>
+                  <tbody>${items.map(t => `
+                    <tr data-id="${t.id}" data-status-row="${t.status}">
+                      <td class="dispatch-task-title">${renderTitleCell(t)}</td>
+                      <td>${renderNodeCell(t)}</td>
+                      <td>${renderCurrentOwnerCell(t)}</td>
+                      <td>${renderPriorityCell(t)}</td>
+                      <td>${renderTeamCell(t)}</td>
+                      <td>${renderOwnerCell(t)}</td>
+                      <td>${renderPdCell(t)}</td>
+                      <td>${renderDueCell(t)}</td>
+                      <td>${plannerActions(t)}</td>
+                    </tr>
+                  `).join("")}</tbody>
+                </table>
+              </div>
+            ` : `<div class="dispatch-empty">当前没有${status}任务。</div>`}
+          </section>
+        `;
+      }).join("")}</div>`;
+    }
+
+    function plannerActions(t) {
+      const actionMap = {
+        "新需求": [
+          { action: "dispatch-ready", label: "进入派单", tone: "primary" }
+        ],
+        "待补资料": [
+          { action: "dispatch-ready", label: "回到派单", tone: "back" },
+          { action: "start-making", label: "资料齐全", tone: "primary" }
+        ],
+        "待派单": [
+          { action: "need-material", label: "缺资料", tone: "back" },
+          { action: "start-making", label: "资料齐全开工", tone: "primary" }
+        ]
+      };
+      const actions = actionMap[t.status] || [];
+      return `<div class="mini-actions ${actions.length === 1 ? "single" : ""}">${actions.map(item => `<button data-action="${item.action}" data-id="${t.id}" data-tone="${item.tone}" class="${item.tone === "primary" ? "primary-mini" : ""}">${item.label}</button>`).join("")}</div>`;
+    }
+
+    function teamSlotCount(team) {
+      if (team.capacityLabel === "按单评估" || team.emergencyOnly) return team.reserve || 1;
+      return Math.max(1, team.capacity || 1);
+    }
+
+    function releaseLabel(task, month, weekIndex) {
+      if (!task.due || monthKey(task.due) !== month || weekIndexInMonth(task.due) !== weekIndex) return "";
+      const day = Number(task.due.slice(8, 10));
+      const weekStart = [1, 8, 15, 22][weekIndex];
+      return day <= weekStart + 3 ? "周中释放" : "";
+    }
+
+    function renderLoadSegments(team, teamTasks, month, weekIndex, compact = false) {
+      const cap = teamSlotCount(team);
+      const sorted = [...teamTasks].sort((a, b) => (a.due || "").localeCompare(b.due || "") || (a.priority === "紧急" ? -1 : 1));
+      const overflowCount = Math.max(0, sorted.length - cap);
+      const visibleOverflow = Math.min(2, overflowCount);
+      const visibleCount = Math.min(sorted.length, cap + visibleOverflow);
+      const segmentCount = Math.max(cap, visibleCount);
+      const segments = [];
+      const details = [];
+      for (let i = 0; i < segmentCount; i++) {
+        const task = sorted[i];
+        if (!task) {
+          segments.push(`<i class="load-segment empty" title="${team.capacityLabel === "按单评估" ? "按单评估" : "可接"}"></i>`);
+          continue;
+        }
+        const release = releaseLabel(task, month, weekIndex);
+        const overflow = i >= cap;
+        segments.push(`<i class="load-segment ${overflow ? "overflow" : "filled"} ${release ? "release" : ""}" data-task-id="${task.id}" title="${task.title}｜${overflow ? "超额" : release || "占用"}"></i>`);
+        details.push(`<div data-task-id="${task.id}"><b>${task.id}</b> ${task.title}${release ? " · 周中释放" : ""}${overflow ? " · 超额" : ""}</div>`);
+      }
+      const hiddenOverflow = overflowCount - visibleOverflow;
+      if (hiddenOverflow > 0 && !compact) {
+        details.push(`<div><b>+${hiddenOverflow}</b> 节超额未展开显示</div>`);
+      }
+      const legend = compact ? "" : `
+        <div class="load-legend">
+          <span><i></i>占用</span>
+          <span><i class="release-dot"></i>周中释放</span>
+          <span><i class="empty-dot"></i>可接</span>
+          ${overflowCount ? `<span><i class="overflow-dot"></i>超额 ${overflowCount}</span>` : ""}
+        </div>
+      `;
+      const detail = compact || !details.length ? "" : `<div class="load-detail">${details.join("")}</div>`;
+      return `<div class="load-segments" style="--slots:${segmentCount}">${segments.join("")}</div>${legend}${detail}`;
+    }
+
+    function renderCapacity() {
+      const currentMonth = monthKey(todayISO());
+      const currentWeek = weekIndexInMonth(todayISO());
+      const currentWeekTasks = filteredTasks().filter(t => t.status !== "已交付" && monthKey(taskDate(t)) === currentMonth && weekIndexInMonth(taskDate(t)) === currentWeek);
+      $("#capacityGrid").innerHTML = teamCapacity.map(team => {
+        const actual = tasks.filter(t => t.team === team.name && t.status !== "已交付").length;
+        const teamTasks = currentWeekTasks.filter(t => t.team === team.name);
+        const cap = teamSlotCount(team);
+        const free = Math.max(0, cap - teamTasks.length);
+        const releaseCount = teamTasks.filter(t => releaseLabel(t, currentMonth, currentWeek)).length;
+        const capacityLabel = team.capacityLabel || (team.emergencyOnly ? "紧急备用" : `${team.capacity} 节/周${team.pd ? `（约 ${team.pd}PD）` : ""}`);
+        return `
+          <section class="team-card">
+            <h3>${teamLabel(team.name)}</h3>
+            <div class="kv">
+              ${team.coordinator ? `<span>${team.coordinatorLabel || "统筹"}</span><b>${team.coordinator}</b>` : ""}
+              <span>成员</span><b>${team.members}</b>
+              <span>周产能</span><b>${capacityLabel}</b>
+              <span>系统当前未交付</span><b>${actual}</b>
+              <span>本周格子</span><b>${teamTasks.length}/${cap}${free ? `，空 ${free}` : ""}${releaseCount ? `，释放 ${releaseCount}` : ""}</b>
+            </div>
+            ${renderLoadSegments(team, teamTasks, currentMonth, currentWeek)}
+            <div class="chips"><span class="chip ${chipClass(team.name)}">${team.fit}</span></div>
+          </section>
+        `;
+      }).join("");
+      $("#sideLoad").innerHTML = teamCapacity.map(team => {
+        const teamTasks = currentWeekTasks.filter(t => t.team === team.name);
+        const cap = teamSlotCount(team);
+        return `<div class="team-row"><span><b>${teamLabel(team.name)}</b><em>${teamTasks.length}/${cap}</em></span>${renderLoadSegments(team, teamTasks, currentMonth, currentWeek, true)}</div>`;
+      }).join("");
+    }
+
+    function taskDate(task) {
+      return task.planStart || task.due;
+    }
+
+    function monthKey(dateText) {
+      return (dateText || "").slice(0, 7);
+    }
+
+    function weekIndexInMonth(dateText) {
+      const day = Number((dateText || "").slice(8, 10));
+      if (!day || day <= 7) return 0;
+      if (day <= 14) return 1;
+      if (day <= 21) return 2;
+      return 3;
+    }
+
+    function weekRangeLabel(month, index) {
+      const [year, monthNumber] = month.split("-").map(Number);
+      const lastDay = new Date(year, monthNumber, 0).getDate();
+      const ranges = [[1, 7], [8, 14], [15, 21], [22, lastDay]];
+      const [start, end] = ranges[index];
+      return `${month}-${String(start).padStart(2, "0")} 至 ${month}-${String(end).padStart(2, "0")}`;
+    }
+
+    function weekHealth(team, teamTasks) {
+      const count = teamTasks.length;
+      if (team.capacityLabel === "按单评估") {
+        if (count === 0) return { text: "专项", cls: "blue", cap: team.reserve || 1, label: "按单" };
+        return { text: "启用", cls: "teal", cap: team.reserve || 1, label: `${count}单` };
+      }
+      if (team.emergencyOnly) {
+        if (count === 0) return { text: "备用", cls: "violet", cap: team.reserve || 1, label: "备用" };
+        const hasUrgent = teamTasks.some(t => ["紧急", "高"].includes(t.priority));
+        return { text: hasUrgent ? "急单启用" : "慎用", cls: hasUrgent ? "amber" : "red", cap: team.reserve || 1, label: `${count}/${team.reserve || 1}` };
+      }
+      const cap = Math.max(1, team.capacity);
+      if (count > cap) return { text: "爆量", cls: "red", cap, label: `${count}/${cap}` };
+      if (count === 0) return { text: "轮空", cls: "violet", cap, label: `${count}/${cap}` };
+      if (count <= Math.max(1, Math.floor(cap * 0.35))) return { text: "偏空", cls: "amber", cap, label: `${count}/${cap}` };
+      return { text: "均衡", cls: "green", cap, label: `${count}/${cap}` };
+    }
+
+    function renderWeekly() {
+      const months = Array.from(new Set(tasks.map(t => monthKey(taskDate(t))).filter(Boolean))).sort();
+      const currentMonth = monthKey(todayISO());
+      const options = months.length ? months : [currentMonth];
+      const select = $("#monthSelect");
+      const previous = select.value || currentMonth;
+      const optionKey = options.join("|");
+      if (select.dataset.options !== optionKey) {
+        select.innerHTML = options.map(m => `<option value="${m}">${m}</option>`).join("");
+        select.value = options.includes(previous) ? previous : options.includes(currentMonth) ? currentMonth : options[0];
+        select.dataset.options = optionKey;
+      }
+      const selectedMonth = select.value || currentMonth;
+      const monthTasks = filteredTasks().filter(t => monthKey(taskDate(t)) === selectedMonth && t.status !== "已交付");
+      const weeks = [0, 1, 2, 3].map(index => monthTasks.filter(t => weekIndexInMonth(taskDate(t)) === index));
+      $("#weeklyGrid").innerHTML = weeks.map((weekTasks, index) => {
+        const riskCount = weekTasks.filter(t => ["紧急", "高"].includes(t.priority) || t.status === "待补资料").length;
+        const idleTeams = teamCapacity.filter(team => weekTasks.filter(t => t.team === team.name).length === 0).length;
+        return `
+          <section class="week-card">
+            <div class="week-head">
+              <h3>第 ${index + 1} 周</h3>
+              <small>${weekRangeLabel(selectedMonth, index)}</small>
+              <div class="week-stats">
+                <div class="week-stat"><b>${weekTasks.length}</b><span>任务</span></div>
+                <div class="week-stat"><b>${riskCount}</b><span>风险</span></div>
+                <div class="week-stat"><b>${idleTeams}</b><span>轮空组</span></div>
+              </div>
+            </div>
+            <div class="week-body">
+              ${teamCapacity.map(team => {
+                const teamTasks = weekTasks.filter(t => t.team === team.name);
+                const health = weekHealth(team, teamTasks);
+                return `
+                  <div class="team-week">
+                    <div class="team-week-head">
+                      <span>${teamLabel(team.name)}</span>
+                      <span class="chip ${health.cls}">${health.label} ${health.text}</span>
+                    </div>
+                    ${renderLoadSegments(team, teamTasks, selectedMonth, index)}
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </section>
+        `;
+      }).join("");
+    }
+
+    function wireDrag() {
+      $$(".task-card").forEach(card => {
+        card.addEventListener("dragstart", e => {
+          card.classList.add("dragging");
+          e.dataTransfer.setData("text/plain", card.dataset.id);
+        });
+        card.addEventListener("dragend", () => card.classList.remove("dragging"));
+      });
+      $$(".dropzone").forEach(zone => {
+        zone.addEventListener("dragover", e => {
+          e.preventDefault();
+          zone.classList.add("over");
+        });
+        zone.addEventListener("dragleave", () => zone.classList.remove("over"));
+        zone.addEventListener("drop", e => {
+          e.preventDefault();
+          zone.classList.remove("over");
+          const id = e.dataTransfer.getData("text/plain");
+          const task = tasks.find(t => t.id === id);
+          if (task) {
+            applyStatus(task, zone.dataset.status);
+            save();
+            renderAll();
+          }
+        });
+      });
+    }
+
+    function statusProgress(status, current) {
+      const map = { "新需求": 0, "待派单": 12, "待补资料": 12, "制作中": Math.max(25, current), "待内审": 85, "待业务审核": 95, "返修中": 70, "已交付": 100 };
+      return map[status] ?? current;
+    }
+
+    function updateTaskStatus(id, status) {
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+      applyStatus(task, status);
+      save();
+      renderAll();
+    }
+
+    function selectTask(id) {
+      selectedTaskId = id || "";
+      $$(".focus").forEach(el => el.classList.remove("focus"));
+      if (!selectedTaskId) return;
+      const target = document.querySelector(`[data-id="${selectedTaskId}"]`);
+      if (target) target.classList.add("focus");
+    }
+
+    function deleteSelectedTask() {
+      if (!selectedTaskId) return;
+      const task = tasks.find(t => t.id === selectedTaskId);
+      if (!task) return;
+      if (!confirm(`删除 ${task.id}｜${task.title}？`)) return;
+      tasks = tasks.filter(t => t.id !== selectedTaskId);
+      selectedTaskId = "";
+      save();
+      renderAll();
+    }
+
+    function applyStatus(task, status) {
+      task.status = status;
+      task.currentNode = "";
+      task.currentOwner = "";
+      task.progress = statusProgress(status, task.progress);
+      if (status === "待派单") {
+        const owners = ownerOptionsForTeam(task.team);
+        if (!owners.includes(task.owner)) task.owner = owners[0] || task.owner || "待定";
+        if (!task.maker || !owners.includes(task.maker)) task.maker = task.owner;
+        if (!task.planStart) task.planStart = todayISO();
+      }
+      if (status === "待补资料") task.material = task.material === "齐全" ? "待确认" : task.material;
+      if (status === "制作中") task.material = "齐全";
+      if (status === "制作中" && !task.maker) task.maker = task.owner;
+      if (status === "返修中" && !task.reworkCount) task.reworkCount = 1;
+      if (status === "已交付" && !task.actualDelivery) task.actualDelivery = todayISO();
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderKanban();
+      renderDemand();
+      renderSchedule();
+      renderPlanner();
+      renderWeekly();
+      renderCapacity();
+    }
+
+    function switchView(view) {
+      document.body.dataset.view = view;
+      $$(".nav button").forEach(b => b.classList.toggle("active", b.dataset.view === view));
+      $$(".view").forEach(v => v.classList.toggle("active", v.id === view));
+      const active = $(`.nav button[data-view="${view}"]`);
+      if (active) $("#pageTitle").textContent = active.firstChild.textContent.trim();
+    }
+
+    function viewForTask(task) {
+      if (intakeStatuses.includes(task.status)) return "planner";
+      if (dispatchStatuses.includes(task.status)) return "planner";
+      return "kanban";
+    }
+
+    function focusTask(id) {
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+      switchView(viewForTask(task));
+      renderAll();
+      requestAnimationFrame(() => {
+        const target = document.querySelector(`[data-id="${id}"]`);
+        if (!target) return;
+        $$(".focus").forEach(el => el.classList.remove("focus"));
+        target.classList.add("focus");
+        target.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+        window.setTimeout(() => target.classList.remove("focus"), 1800);
+      });
+    }
+
+    function jumpToStatus(status, view) {
+      const targetView = view || (intakeStatuses.includes(status) ? "planner" : dispatchStatuses.includes(status) ? "planner" : "kanban");
+      switchView(targetView);
+      renderAll();
+      requestAnimationFrame(() => {
+        let target = null;
+        if (status) target = document.querySelector(`[data-status="${status}"], tr[data-id]`);
+        if (targetView === "planner" && status) {
+          const task = filteredTasks().find(t => t.status === status);
+          target = task ? document.querySelector(`[data-id="${task.id}"]`) : $(`#${targetView}`);
+        }
+        if (!target) target = document.querySelector(`#${targetView}`);
+        target.scrollIntoView({ behavior: "smooth", block: "start", inline: "center" });
+      });
+    }
+
+    function fillSelects() {
+      const businessOptions = businesses.map(b => `<option>${b}</option>`).join("");
+      const teamOptions = teams.map(t => `<option>${t}</option>`).join("");
+      const typeOptions = types.map(t => `<option>${t}</option>`).join("");
+      $("#businessFilter").insertAdjacentHTML("beforeend", businessOptions);
+      $("#teamFilter").insertAdjacentHTML("beforeend", teamOptions);
+      $("#taskForm [name='business']").innerHTML = businessOptions;
+      $("#taskForm [name='team']").innerHTML = teamOptions;
+      $("#taskForm [name='type']").innerHTML = typeOptions;
+    }
+
+    $$(".nav button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        switchView(btn.dataset.view);
+      });
+    });
+
+    ["searchInput", "businessFilter", "teamFilter", "priorityFilter"].forEach(id => {
+      $("#" + id).addEventListener("input", renderAll);
+      $("#" + id).addEventListener("change", renderAll);
+    });
+    $("#monthSelect").addEventListener("change", renderWeekly);
+    $("#toggleDelivered").addEventListener("click", () => {
+      showDelivered = !showDelivered;
+      renderKanban();
+    });
+
+    $("#addInlineTask").addEventListener("click", () => {
+      const task = createInlineTask();
+      tasks.unshift(task);
+      save();
+      switchView("planner");
+      renderAll();
+      requestAnimationFrame(() => {
+        const input = document.querySelector(`[data-id="${task.id}"][data-inline-field="title"]`);
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      });
+    });
+    $("#closeModal").addEventListener("click", () => $("#modal").classList.remove("open"));
+    $("#cancelModal").addEventListener("click", () => $("#modal").classList.remove("open"));
+    $("#modal").addEventListener("click", e => {
+      if (e.target.id === "modal") $("#modal").classList.remove("open");
+    });
+    $("#openImport").addEventListener("click", () => {
+      $("#importModal").classList.add("open");
+      $("#importResult").className = "import-result";
+      $("#importResult").textContent = "粘贴后点击导入；重复标题会自动跳过。";
+      $("#importText").focus();
+    });
+    $("#closeImport").addEventListener("click", () => $("#importModal").classList.remove("open"));
+    $("#cancelImport").addEventListener("click", () => $("#importModal").classList.remove("open"));
+    $("#importModal").addEventListener("click", e => {
+      if (e.target.id === "importModal") $("#importModal").classList.remove("open");
+    });
+    $("#runImport").addEventListener("click", () => {
+      const parsed = parseFeishuPaste($("#importText").value);
+      if (!parsed.length) {
+        $("#importResult").className = "import-result error";
+        $("#importResult").textContent = "没有识别到可导入的行。请确认第一行是表头，且包含“名称”这类标题列。";
+        return;
+      }
+      let imported = 0;
+      let skipped = 0;
+      parsed.forEach(item => {
+        const duplicated = tasks.some(task => task.title.trim() === item.title.trim());
+        if (duplicated) {
+          skipped += 1;
+          return;
+        }
+        tasks.unshift({ id: nextTaskId(), ...item });
+        imported += 1;
+      });
+      save();
+      renderAll();
+      $("#importResult").className = imported ? "import-result ok" : "import-result error";
+      $("#importResult").textContent = `已导入 ${imported} 条，跳过重复 ${skipped} 条。新任务已进入接需派单的新需求分组。`;
+      if (imported) {
+        $("#importText").value = "";
+        switchView("planner");
+      }
+    });
+
+    $("#taskForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const form = new FormData(e.currentTarget);
+      const business = form.get("business");
+      const id = nextTaskId();
+      tasks.unshift({
+        id,
+        title: form.get("title"),
+        business,
+        requester: form.get("requester"),
+        type: form.get("type"),
+        priority: form.get("priority"),
+        team: form.get("team"),
+        owner: form.get("owner"),
+        maker: form.get("maker") || form.get("owner"),
+        status: "新需求",
+        due: form.get("due"),
+        progress: 0,
+        material: form.get("material"),
+        planStart: form.get("planStart"),
+        slot: form.get("slot"),
+        estimatedPd: Number(form.get("estimatedPd") || defaultPd(form.get("type"))),
+        materialLink: form.get("materialLink"),
+        actualDelivery: form.get("actualDelivery"),
+        reworkCount: Number(form.get("reworkCount") || 0),
+        reworkReason: form.get("reworkReason"),
+        note: form.get("note") || "待补充制作要求。"
+      });
+      save();
+      e.currentTarget.reset();
+      $("#modal").classList.remove("open");
+      renderAll();
+    });
+
+    document.addEventListener("click", e => {
+      const metric = e.target.closest("[data-metric-view]");
+      if (metric) {
+        if (metric.dataset.metricPriority) {
+          $("#priorityFilter").value = metric.dataset.metricPriority;
+        } else {
+          $("#priorityFilter").value = "all";
+        }
+        jumpToStatus(metric.dataset.metricStatus, metric.dataset.metricView);
+        return;
+      }
+
+      const taskEntry = e.target.closest("[data-task-id]");
+      if (taskEntry) {
+        focusTask(taskEntry.dataset.taskId);
+        return;
+      }
+
+      const button = e.target.closest("[data-action]");
+      if (!button && !e.target.closest("input, select, textarea, button")) {
+        const selectable = e.target.closest(".task-card, tr[data-id]");
+        if (selectable?.dataset.id) {
+          selectTask(selectable.dataset.id);
+          return;
+        }
+      }
+      if (!button) return;
+      const id = button.dataset.id;
+      selectTask(id);
+      if (button.dataset.action === "need-material") updateTaskStatus(id, "待补资料");
+      if (button.dataset.action === "to-evaluate") updateTaskStatus(id, "待评估");
+      if (button.dataset.action === "to-schedule") updateTaskStatus(id, "待排产");
+      if (button.dataset.action === "dispatch-ready") updateTaskStatus(id, "待派单");
+      if (button.dataset.action === "start-making") updateTaskStatus(id, "制作中");
+    });
+
+    document.addEventListener("change", e => {
+      const control = e.target.closest("[data-inline-field]");
+      if (!control) return;
+      const task = tasks.find(t => t.id === control.dataset.id);
+      if (!task) return;
+      if (control.dataset.inlineField === "team") {
+        task.team = control.value;
+        const owners = ownerOptionsForTeam(task.team);
+        task.owner = owners[0] || "待定";
+        task.maker = task.owner;
+        task.currentOwner = "";
+      }
+      if (control.dataset.inlineField === "owner") {
+        task.owner = control.value;
+        task.maker = control.value;
+      }
+      if (control.dataset.inlineField === "title") {
+        task.title = control.value.trim() || "新需求待命名";
+      }
+      if (control.dataset.inlineField === "business") {
+        task.business = control.value;
+      }
+      if (control.dataset.inlineField === "type") {
+        task.type = control.value;
+        if (!task.estimatedPd) task.estimatedPd = defaultPd(task.type);
+      }
+      if (control.dataset.inlineField === "priority") {
+        task.priority = control.value;
+      }
+      if (control.dataset.inlineField === "estimatedPd") {
+        task.estimatedPd = Number(control.value || 0);
+      }
+      if (control.dataset.inlineField === "due") {
+        task.due = control.value;
+      }
+      if (control.dataset.inlineField === "currentNode") {
+        task.currentNode = control.value;
+      }
+      if (control.dataset.inlineField === "currentOwner") {
+        task.currentOwner = control.value;
+        task.requester = control.value;
+      }
+      save();
+      renderAll();
+    });
+
+    document.addEventListener("input", e => {
+      const control = e.target.closest('[data-inline-field="title"]');
+      if (!control) return;
+      const task = tasks.find(t => t.id === control.dataset.id);
+      if (!task) return;
+      task.title = control.value.trim() || "新需求待命名";
+      save();
+    });
+
+    document.addEventListener("keydown", e => {
+      if (!["Delete", "Backspace"].includes(e.key)) return;
+      if (e.target.closest("input, select, textarea")) return;
+      if (!selectedTaskId) return;
+      e.preventDefault();
+      deleteSelectedTask();
+    });
+
+    fillSelects();
+    switchView("dashboard");
+    renderAll();
+  </script>
+</body>
+</html>
